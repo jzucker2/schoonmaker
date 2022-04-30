@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    reviewers:
+      - jzucker2
+    assignees:
+      - jzucker2
+    labels:
+      - github_actions
+      - dependencies
+      - chores
+  # maintain dependencies for python project
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    reviewers:
+      - jzucker2
+    assignees:
+      - jzucker2
+    labels:
+      - dependencies
+#    allow:
+#      # Allow updates for flask and related packages
+#      - dependency-name: "Flask*"
