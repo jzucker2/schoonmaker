@@ -15,3 +15,7 @@ Here's an example to run a smoke test:
 ```
 python test.py
 ```
+
+```
+python cli.py -f samples/final_draft_sample.fdx
+```
