@@ -15,6 +15,22 @@ class Parser(object):
     def parse(cls, file_name):
         return ET.parse(file_name)
 
+    def parse_content(self, element):
+        log.info('!!!!!! we are parsing content!!!')
+        log.info(f'Content element: {element} has text: {element.text}')
+        for nested_element in element:
+            n_m = f'nested_element: {nested_element} with ' \
+                  f'tag: {nested_element.tag}, ' \
+                  f'attrib: {nested_element.attrib}, ' \
+                  f'text: {nested_element.text}'
+            log.info(n_m)
+            for double_nested_element in nested_element:
+                d_m = f'double_nested_element: {double_nested_element} ' \
+                      f'with tag: {double_nested_element.tag}, ' \
+                      f'attrib: {double_nested_element.attrib}, ' \
+                      f'text: {double_nested_element.text}'
+                log.info(d_m)
+
     def naive_parse(self, file_name):
         log.info(f'going with file_name: {file_name}')
         tree = self.parse(file_name)
@@ -31,16 +47,5 @@ class Parser(object):
             log.info(c_m)
             if child.tag == ElementTag.CONTENT.value:
                 log.info('we found content!!!')
-                log.info(f'child: {child} has text: {child.text}')
-                for nested_child in child:
-                    n_m = f'nested_child: {nested_child} with ' \
-                          f'tag: {nested_child.tag}, ' \
-                          f'attrib: {nested_child.attrib}, ' \
-                          f'text: {nested_child.text}'
-                    log.info(n_m)
-                    for double_nested_child in nested_child:
-                        d_m = f'double_nested_child: {double_nested_child} ' \
-                              f'with tag: {double_nested_child.tag}, ' \
-                              f'attrib: {double_nested_child.attrib}, ' \
-                              f'text: {double_nested_child.text}'
-                        log.info(d_m)
+                log.info(f'Content child: {child} has text: {child.text}')
+                self.parse_content(child)

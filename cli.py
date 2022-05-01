@@ -2,7 +2,6 @@
 from schoonmaker.utils import set_up_logging, get_logger
 from schoonmaker.cli_arg_parser import CLIArgParser
 from schoonmaker.parser import Parser
-from schoonmaker.element_tag import ElementTag
 
 
 set_up_logging()

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from schoonmaker.utils import set_up_logging, get_logger
 from schoonmaker.parser import Parser
-from schoonmaker.element_tag import ElementTag
 
 
 set_up_logging()
