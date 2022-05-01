@@ -2,10 +2,15 @@ from enum import Enum
 
 
 class ElementAttribute(Enum):
+    # FINAL_DRAFT
     DOCUMENT_TYPE = 'DocumentType'
     TEMPLATE = 'Template'
     VERSION = 'Version'
+
+    # PARAGRAPH and TEXT can contain
     TYPE = 'Type'
+    ADORNMENT_STYLE = 'AdornmentStyle'
+    BACKGROUND = 'Background'
     ALIGNMENT = 'Alignment'
     FIRST_INDENT = 'FirstIndent'
     LEADING = 'Leading'
@@ -14,8 +19,6 @@ class ElementAttribute(Enum):
     SPACE_BEFORE = 'SpaceBefore'
     SPACING = 'Spacing'
     STARTS_NEW_PAGE = 'StartsNewPage'
-    ADORNMENT_STYLE = 'AdornmentStyle'
-    BACKGROUND = 'Background'
     COLOR = 'Color'
     FONT = 'Font'
     REVISION_ID = 'RevisionID'
@@ -26,10 +29,16 @@ class ElementAttribute(Enum):
     # `'Bold'`, `''`, `'Italic'`, `'Underline'`, `'Italic+AllCaps'`
     # note the empty string (`''`) as a possible value
     STYLE = 'Style'
+
+    # ALTS
+    # can be `'0'` or `'1'` or `'3'` to
+    # represent DUAL_DIALOGUE active selection
+    CURRENT = 'Current'
+
+    # SCENE_PROPERTIES
     LENGTH = 'Length'
     PAGE = 'Page'
     TITLE = 'Title'
-    CURRENT = 'Current'  # used for `ElementAttribute.ALTS`
 
     # WATERMARKING
     OPACITY = 'Opacity'

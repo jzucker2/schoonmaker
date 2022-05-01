@@ -44,7 +44,7 @@ class ElementTag(Enum):
     PARAGRAPH = 'Paragraph'
 
     # NESTED IN PARAGRAPH
-    TEXT = 'Text'
+    TEXT = 'Text'  # only one to actually contain `.text`
     SCENE_PROPERTIES = 'SceneProperties'
     ALTS = 'Alts'
     DUAL_DIALOGUE = 'DualDialogue'
