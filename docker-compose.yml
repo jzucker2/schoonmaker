@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+
+  schoonmaker:
+    container_name: schoonmaker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ['python', 'test.py']
+    restart: on-failure
+    stdin_open: true
+    tty: true
