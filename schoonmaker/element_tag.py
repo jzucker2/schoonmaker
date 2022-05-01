@@ -40,5 +40,11 @@ class ElementTag(Enum):
     IMAGES = 'Images'
     OUTLINES = 'Outlines'
 
-    # CONTENT
+    # NESTED IN CONTENT
     PARAGRAPH = 'Paragraph'
+
+    # NESTED IN PARAGRAPH
+    TEXT = 'Text'
+    SCENE_PROPERTIES = 'SceneProperties'
+    ALTS = 'Alts'
+    DUAL_DIALOGUE = 'DualDialogue'
