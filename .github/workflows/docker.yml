@@ -25,10 +25,6 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
-# notes: break up into 2 sequential steps to build base image then
-# code image and build times go way way down? How to version each
-# component? Want same repo for `requirements.txt` reference
-# and use.
 jobs:
   docker:
     runs-on: ubuntu-latest
