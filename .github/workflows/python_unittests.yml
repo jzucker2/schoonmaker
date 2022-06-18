@@ -23,7 +23,7 @@ jobs:
       - name: Check out source repository
         uses: actions/checkout@v3
       - name: Set up Python environment
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: "3.8"
           cache: 'pip'
@@ -33,4 +33,3 @@ jobs:
       - name: Test with unittest
         run: |
           python -m unittest discover
-
