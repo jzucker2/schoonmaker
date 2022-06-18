@@ -1,16 +1,6 @@
 FROM python:3.8-slim-buster AS linux_base
 
-# install deps
-RUN apt-get update -y && apt-get install -y \
-        git \
-        xz-utils \
-        libffi-dev \
-        libssl-dev \
-        curl \
-        gcc \
-        build-essential \
-    && apt-get clean
-
+# install deps with `apt-get` (not used here!)
 
 FROM linux_base AS python_dependencies
 COPY requirements.txt requirements.txt
