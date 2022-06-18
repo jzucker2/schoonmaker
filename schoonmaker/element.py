@@ -5,6 +5,7 @@ from .element_tag import ElementTag
 log = get_logger(__name__)
 
 
+# TODO: consider renaming because XML calls it `Element` too
 class Element(object):
     def __init__(self, xml_element):
         self.xml_element = xml_element
@@ -31,6 +32,7 @@ class Element(object):
 
     def __repr__(self):
         return f'Element => ' \
+               f'xml_element: {self.xml_element}, ' \
                f'tag: {self.tag}, ' \
                f'attrib: {self.attrib}'
 
