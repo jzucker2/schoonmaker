@@ -3,9 +3,9 @@ Dockerfile
 .gitignore
 .dockerignore
 
-commando/app/app.db
-commando/tests/
-commando/client/
+schoonmaker/app/app.db
+tests
+samples
 
 /node_modules
 *.DS_Store
