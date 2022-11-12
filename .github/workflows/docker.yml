@@ -25,6 +25,10 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
+# notes: break up into 2 sequential steps to build base image then
+# code image and build times go way way down? How to version each
+# component? Want same repo for `requirements.txt` reference
+# and use.
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -75,7 +79,7 @@ jobs:
           # linux/amd64, linux/arm64, linux/riscv64, linux/ppc64le, linux/s390x, linux/386, linux/arm/v7, linux/arm/v6
           # for details on linux/arm/v6 (raspberry pi 0) support,
           # see here: https://raspberrypi.stackexchange.com/questions/111130/how-to-install-nodejs-v12-on-raspi-zero-armv6-not-available-for-download-anymor
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

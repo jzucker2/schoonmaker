@@ -6,4 +6,5 @@ exclude =
     old,
     build,
     dist,
-    */migrations/*
+    */migrations/*,
+    venv

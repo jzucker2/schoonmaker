@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster AS linux_base
+FROM python:3.10-slim-buster AS linux_base
 
 # install deps with `apt-get` (not used here!)
 
@@ -15,5 +15,5 @@ WORKDIR /schoonmaker
 
 FROM source_code AS run_server
 
-# can use `run_dev.sh` or `run_prod.sh`
+# does this work?
 CMD ["python", "test.py"]

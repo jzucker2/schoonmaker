@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
 
-DEFAULT_SAMPLE_FILE_PATH = 'samples/final_draft_sample.fdx'
+DEFAULT_SAMPLE_FILE_PATH = 'samples/final_draft_12_sample.fdx'
 
 
 # https://docs.python.org/3/library/argparse.html#module-argparse
