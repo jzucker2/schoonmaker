@@ -1,4 +1,4 @@
-FROM python:3.10-slim-buster AS linux_base
+FROM python:3.11.0-slim-buster AS linux_base
 
 # install deps with `apt-get` (not used here!)
 
