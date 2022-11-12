@@ -25,11 +25,11 @@ jobs:
       - name: Set up Python environment
         uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version: "3.10"
           cache: 'pip'
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
       - name: Test with unittest
         run: |
-          python -m unittest discover
+          sh scripts/unit_tests.sh
