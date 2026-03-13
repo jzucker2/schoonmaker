@@ -78,47 +78,24 @@ class FDXParser:
                 p = self._parse_paragraph(elem)
                 ptype = p.type
 
-                def flush_dialogue_block() -> None:
-                    nonlocal pending_character, pending_modifiers
-                    nonlocal pending_parts, pending_para_meta
-                    nonlocal pending_dual_mode, pending_dual_group
-                    nonlocal current_scene, screenplay
-
-                    if not pending_character:
-                        pending_modifiers = []
-                        pending_parts = []
-                        pending_para_meta = []
-                        pending_dual_mode = False
-                        pending_dual_group = None
-                        return
-
-                    block = DialogueBlock(
-                        character=pending_character,
-                        parts=pending_parts[:],
-                        modifiers=pending_modifiers[:],
-                        dual=pending_dual_mode,
-                        dual_group=pending_dual_group,
-                        meta={
-                            "source_paragraphs": [
-                                asdict(x) for x in pending_para_meta
-                            ],
-                        },
-                    )
-
-                    if current_scene is None:
-                        screenplay.preamble.append(block)
-                    else:
-                        current_scene.elements.append(block)
-
-                    pending_character = None
-                    pending_modifiers = []
-                    pending_parts = []
-                    pending_para_meta = []
-                    pending_dual_mode = False
-                    pending_dual_group = None
-
                 if ptype == "Scene Heading":
-                    flush_dialogue_block()
+                    (
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    ) = self._flush_pending_dialogue(
+                        screenplay,
+                        current_scene,
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    )
                     heading = SceneHeading(
                         raw=p.raw_text,
                         scene_number=p.attrs.get("Number")
@@ -138,7 +115,23 @@ class FDXParser:
                     screenplay.scenes.append(current_scene)
 
                 elif ptype == "Character":
-                    flush_dialogue_block()
+                    (
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    ) = self._flush_pending_dialogue(
+                        screenplay,
+                        current_scene,
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    )
                     name, modifiers = self._split_character_and_modifiers(
                         p.raw_text
                     )
@@ -188,7 +181,23 @@ class FDXParser:
                         )
 
                 elif ptype == "Action":
-                    flush_dialogue_block()
+                    (
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    ) = self._flush_pending_dialogue(
+                        screenplay,
+                        current_scene,
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    )
                     self._append_element(
                         screenplay,
                         current_scene,
@@ -199,7 +208,23 @@ class FDXParser:
                     )
 
                 elif ptype == "Transition":
-                    flush_dialogue_block()
+                    (
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    ) = self._flush_pending_dialogue(
+                        screenplay,
+                        current_scene,
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    )
                     self._append_element(
                         screenplay,
                         current_scene,
@@ -210,7 +235,23 @@ class FDXParser:
                     )
 
                 elif ptype == "Shot":
-                    flush_dialogue_block()
+                    (
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    ) = self._flush_pending_dialogue(
+                        screenplay,
+                        current_scene,
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    )
                     self._append_element(
                         screenplay,
                         current_scene,
@@ -221,7 +262,23 @@ class FDXParser:
                     )
 
                 elif ptype in {"Lyrics", "Lyric"}:
-                    flush_dialogue_block()
+                    (
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    ) = self._flush_pending_dialogue(
+                        screenplay,
+                        current_scene,
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    )
                     self._append_element(
                         screenplay,
                         current_scene,
@@ -232,7 +289,23 @@ class FDXParser:
                     )
 
                 else:
-                    flush_dialogue_block()
+                    (
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    ) = self._flush_pending_dialogue(
+                        screenplay,
+                        current_scene,
+                        pending_character,
+                        pending_modifiers,
+                        pending_parts,
+                        pending_para_meta,
+                        pending_dual_mode,
+                        pending_dual_group,
+                    )
                     self._append_element(
                         screenplay,
                         current_scene,
@@ -247,21 +320,16 @@ class FDXParser:
 
                 elem.clear()
 
-        if pending_character:
-            block = DialogueBlock(
-                character=pending_character,
-                parts=pending_parts,
-                modifiers=pending_modifiers,
-                dual=pending_dual_mode,
-                dual_group=pending_dual_group,
-                meta={
-                    "source_paragraphs": [asdict(x) for x in pending_para_meta]
-                },
-            )
-            if current_scene is None:
-                screenplay.preamble.append(block)
-            else:
-                current_scene.elements.append(block)
+        self._flush_pending_dialogue(
+            screenplay,
+            current_scene,
+            pending_character,
+            pending_modifiers,
+            pending_parts,
+            pending_para_meta,
+            pending_dual_mode,
+            pending_dual_group,
+        )
 
         return self._group_adjacent_dual_dialogue(screenplay)
 
@@ -318,14 +386,23 @@ class FDXParser:
     ) -> tuple[str, list[str]]:
         raw = raw.strip()
         modifiers: list[str] = []
-        if "(" in raw and raw.endswith(")"):
-            idx = raw.find("(")
-            name = raw[:idx].strip()
-            inside = raw[idx + 1 : -1].strip()
+        first_paren = raw.find("(")
+        if first_paren == -1:
+            return raw, modifiers
+        name = raw[:first_paren].strip()
+        pos = first_paren
+        while pos < len(raw):
+            open_paren = raw.find("(", pos)
+            if open_paren == -1:
+                break
+            close_paren = raw.find(")", open_paren + 1)
+            if close_paren == -1:
+                break
+            inside = raw[open_paren + 1 : close_paren].strip()
             if inside:
                 modifiers.append(inside)
-            return name, modifiers
-        return raw, modifiers
+            pos = close_paren + 1
+        return name, modifiers
 
     def _detect_dual_dialogue(self, p: ParagraphInfo) -> bool:
         attrs = {k.lower(): v.lower() for k, v in p.attrs.items()}
@@ -333,6 +410,50 @@ class FDXParser:
             if "dual" in key and val in {"yes", "true", "1"}:
                 return True
         return False
+
+    def _flush_pending_dialogue(
+        self,
+        screenplay: Screenplay,
+        current_scene: Optional[Scene],
+        pending_character: Optional[str],
+        pending_modifiers: list[str],
+        pending_parts: list[DialoguePart],
+        pending_para_meta: list[ParagraphInfo],
+        pending_dual_mode: bool,
+        pending_dual_group: Optional[str],
+    ) -> tuple[
+        Optional[str],
+        list[str],
+        list[DialoguePart],
+        list[ParagraphInfo],
+        bool,
+        Optional[str],
+    ]:
+        """Append pending dialogue block if any; return cleared state."""
+        if not pending_character:
+            return (
+                None,
+                [],
+                [],
+                [],
+                False,
+                None,
+            )
+        block = DialogueBlock(
+            character=pending_character,
+            parts=pending_parts[:],
+            modifiers=pending_modifiers[:],
+            dual=pending_dual_mode,
+            dual_group=pending_dual_group,
+            meta={
+                "source_paragraphs": [asdict(x) for x in pending_para_meta],
+            },
+        )
+        if current_scene is None:
+            screenplay.preamble.append(block)
+        else:
+            current_scene.elements.append(block)
+        return (None, [], [], [], False, None)
 
     def _group_adjacent_dual_dialogue(
         self, screenplay: Screenplay

@@ -3,6 +3,23 @@
 from schoonmaker.fdx import FDXParser, screenplay_to_fountain
 
 
+def test_split_character_and_modifiers_multiple_parentheticals():
+    """Multiple (V.O.) (CONT'D) etc. are parsed as separate modifiers."""
+    parser = FDXParser()
+    name, modifiers = parser._split_character_and_modifiers(
+        "JOHN (V.O.) (CONT'D)"
+    )
+    assert name == "JOHN"
+    assert modifiers == ["V.O.", "CONT'D"]
+
+
+def test_split_character_and_modifiers_single_modifier():
+    parser = FDXParser()
+    name, modifiers = parser._split_character_and_modifiers("JANE (O.S.)")
+    assert name == "JANE"
+    assert modifiers == ["O.S."]
+
+
 def test_parse_basic_structure(sample_fdx_path):
     screenplay = FDXParser().parse(str(sample_fdx_path))
 
