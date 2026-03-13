@@ -4,7 +4,7 @@ Python tool for working with Final Draft `.fdx` screenplay files. It parses FDX 
 
 Features:
 
-- **Low-level parse** – Traverse FDX `Content` / `Paragraph` and log structure (`cli.py run`).
+- **Parse & summary** – Parse FDX and print a short summary (document type, version, scene count) with `cli.py run`.
 - **FDX → JSON AST** – Streaming-style parser producing dataclasses (Scene, DialogueBlock, Action, etc.); emit with `cli.py parse`.
 - **FDX → Fountain** – Convert parsed screenplay to Fountain format with `cli.py fountain`.
 
@@ -30,7 +30,7 @@ make check
 Default input file is `samples/final_draft_12_sample.fdx` unless `-f` is given.
 
 ```bash
-# Naive parse (logs Content/Paragraph traversal)
+# Parse FDX and print summary (document_type, version, scene count)
 python cli.py run -f path/to/script.fdx
 
 # Emit FDX → JSON AST to stdout
@@ -44,6 +44,16 @@ python cli.py fountain -f path/to/script.fdx
 
 # Write Fountain to a file
 python cli.py fountain -f path/to/script.fdx -o script.fountain
+```
+
+## Docker
+
+Default image command runs `cli.py run` (parse default sample, print summary).
+
+```bash
+docker compose build && docker compose run --rm schoonmaker
+# Or with your own file (mount a dir and pass -f):
+# docker compose run --rm -v "$(pwd)/my-scripts:/data:ro" schoonmaker python cli.py parse -f /data/script.fdx -o /data/out.json
 ```
 
 See **AGENTS.md** for layout, conventions, and full command reference.

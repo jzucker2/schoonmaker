@@ -65,4 +65,7 @@ make ci-check
 
 - **YAML:** Use `.yamllint`; prefer 2-space indent, no document-start `---`.
 - **Python:** 3.9+ (e.g. `list[...]`, `str | None`). Tests use **pytest**; put fixtures in **`tests/fixtures/`** and reference them from tests (e.g. `Path(__file__).parent / "fixtures" / "sample.fdx"`).
-- **When adding or changing behavior:** Add or update tests in `tests/`, keep **README** and this **AGENTS.md** in sync.
+- **When adding or changing behavior:**
+  - Keep **README** and this **AGENTS.md** in sync; update README when CLI, layout, or usage changes.
+  - Add or update tests in **`tests/`** for new or modified behavior; for bug fixes, add or adjust tests when reasonable so the fix is covered.
+  - Keep files at a **reasonable length**; split modules or extract helpers when a file grows large or a distinct responsibility appears, so the codebase stays navigable.
