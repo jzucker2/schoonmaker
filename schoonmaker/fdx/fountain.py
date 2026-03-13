@@ -62,7 +62,10 @@ def _element_to_fountain_lines(el: object) -> list[str]:
         return [f"~{el.text}"]
 
     if isinstance(el, DialogueBlock):
-        out = [el.character]
+        character_line = el.character
+        if el.modifiers:
+            character_line += " " + " ".join(f"({m})" for m in el.modifiers)
+        out = [character_line]
         for part in el.parts:
             if part.type == "parenthetical":
                 out.append(

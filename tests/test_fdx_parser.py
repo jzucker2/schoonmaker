@@ -40,7 +40,7 @@ def test_convert_to_fountain(sample_fdx_path):
     fountain = screenplay_to_fountain(screenplay)
 
     assert "INT. APARTMENT - NIGHT #1#" in fountain
-    assert "JOHN" in fountain
+    assert "JOHN (V.O.)" in fountain
     assert "(whispering)" in fountain
     assert "Hello?" in fountain
     assert "> CUT TO:" in fountain
