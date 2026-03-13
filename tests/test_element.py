@@ -13,8 +13,8 @@ class TestElement(unittest.TestCase):
         self.assertIsNotNone(self.text_element)
 
     def test_paragraph_element(self):
-        expected_tag = 'Paragraph'
-        expected_attrib = {'Type': 'Action'}
+        expected_tag = "Paragraph"
+        expected_attrib = {"Type": "Action"}
         self.assertIsInstance(self.paragraph_element, XMLElement)
         self.assertEqual(expected_tag, self.paragraph_element.tag)
         self.assertDictEqual(expected_attrib, self.paragraph_element.attrib)
@@ -24,7 +24,7 @@ class TestElement(unittest.TestCase):
         self.assertDictEqual(expected_attrib, element.attrib)
 
     def test_text_element(self):
-        expected_tag = 'Text'
+        expected_tag = "Text"
         self.assertIsInstance(self.text_element, XMLElement)
         self.assertEqual(expected_tag, self.text_element.tag)
         element = Element(self.text_element)
@@ -32,5 +32,5 @@ class TestElement(unittest.TestCase):
         self.assertEqual(expected_tag, element.tag)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

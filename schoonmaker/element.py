@@ -31,11 +31,13 @@ class Element(object):
         return self.xml_element.text
 
     def __repr__(self):
-        return f'Element => ' \
-               f'xml_element: {self.xml_element}, ' \
-               f'tag: {self.tag}, ' \
-               f'attrib: {self.attrib}'
+        return (
+            f"Element => "
+            f"xml_element: {self.xml_element}, "
+            f"tag: {self.tag}, "
+            f"attrib: {self.attrib}"
+        )
 
     @staticmethod
     def test():
-        log.info('element -> test!')
+        log.info("element -> test!")

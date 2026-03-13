@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
 
-DEFAULT_SAMPLE_FILE_PATH = 'samples/final_draft_12_sample.fdx'
+DEFAULT_SAMPLE_FILE_PATH = "samples/final_draft_12_sample.fdx"
 
 
 # https://docs.python.org/3/library/argparse.html#module-argparse
@@ -11,10 +11,13 @@ class CLIArgParser(object):
         self.parser = ArgumentParser()
 
     def _add_args(self):
-        self.parser.add_argument('-f', '--file',
-                                 type=str,
-                                 help='Path to input file',
-                                 default=DEFAULT_SAMPLE_FILE_PATH)
+        self.parser.add_argument(
+            "-f",
+            "--file",
+            type=str,
+            help="Path to input file",
+            default=DEFAULT_SAMPLE_FILE_PATH,
+        )
 
     def _parse_args(self):
         return self.parser.parse_args()
