@@ -5,9 +5,7 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
 ## Layout
 
 - **`schoonmaker/`** – Main package.
-  - **`parser.py`** – Low-level FDX parsing (ElementTree, naive parse of Content/Paragraph).
-  - **`element.py`**, **`element_tag.py`**, **`element_type.py`**, **`element_attribute.py`** – XML element wrappers and FDX enums.
-  - **`fdx/`** – FDX-to-AST and export subpackage:
+  - **`fdx/`** – FDX parsing and export (single parser path):
     - **`models.py`** – Dataclasses for Screenplay, Scene, SceneHeading, DialogueBlock, Action, Transition, etc.
     - **`parser.py`** – `FDXParser`: streaming-ish parser that produces `Screenplay` from an FDX path.
     - **`fountain.py`** – `screenplay_to_fountain(screenplay)` for FDX → Fountain text.
@@ -34,7 +32,7 @@ If the venv is missing or broken: `python -m venv venv` then `venv/bin/pip insta
 ## Commands (from repo root, with venv)
 
 ```bash
-# Run default “naive” parse (logs Content/Paragraph traversal)
+# Parse FDX and print a short summary (document_type, version, scene count)
 python cli.py run -f path/to/script.fdx
 
 # Emit FDX → JSON AST to stdout

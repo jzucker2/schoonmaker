@@ -21,7 +21,7 @@ class CLIArgParser(object):
         subparsers = self.parser.add_subparsers(dest="command", required=True)
 
         run_parser = subparsers.add_parser(
-            "run", help="Naive parse (log Content/Paragraph)"
+            "run", help="Parse FDX and print a short summary"
         )
         run_parser.add_argument(
             "-f", "--file", type=str, default=DEFAULT_SAMPLE_FILE_PATH
