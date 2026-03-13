@@ -8,7 +8,7 @@ test: ## Run tests
 	pytest -v
 
 test-coverage: ## Run tests with coverage
-	pytest --cov=scripts --cov-report=html
+	pytest --cov=schoonmaker --cov-report=html
 
 clean: ## Clean up generated files
 	find . -type f -name "*.pyc" -delete
@@ -23,10 +23,10 @@ install-dev: ## Install development dependencies
 	pip install -r requirements-dev.txt
 
 format: ## Format code with black (fix in place)
-	black scripts/ tests/ --line-length=79
+	black schoonmaker/ tests/ --line-length=79
 
 format-check: ## Check formatting with black (no fix, fails if invalid)
-	black scripts/ tests/ --line-length=79 --check
+	black schoonmaker/ tests/ --line-length=79 --check
 
 lint: ## Lint code with flake8
 	flake8 schoonmaker/ tests/
@@ -34,8 +34,8 @@ lint: ## Lint code with flake8
 check: format-check lint ## Run all checks (format check + lint, no auto-fix)
 
 lint-fix: ## Auto-fix linting issues where possible (autopep8 then black so black wins)
-	autopep8 --in-place --recursive --aggressive --aggressive scripts/ tests/
-	black scripts/ tests/ --line-length=79
+	autopep8 --in-place --recursive --aggressive --aggressive schoonmaker/ tests/
+	black schoonmaker/ tests/ --line-length=79
 
 pre-commit-install: ## Install pre-commit hooks
 	pre-commit install
