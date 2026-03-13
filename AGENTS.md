@@ -31,6 +31,8 @@ If the venv is missing or broken: `python -m venv venv` then `venv/bin/pip insta
 
 ## Commands (from repo root, with venv)
 
+Options like `-f`/`--file` are per-subcommand; pass them after the command (e.g. `cli.py run -f file.fdx`).
+
 ```bash
 # Parse FDX and print a short summary (document_type, version, scene count)
 python cli.py run -f path/to/script.fdx

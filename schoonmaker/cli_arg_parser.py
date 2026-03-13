@@ -11,20 +11,17 @@ class CLIArgParser(object):
             prog="schoonmaker",
             description="Parse FDX files; export JSON AST or Fountain.",
         )
-        self.parser.add_argument(
-            "-f",
-            "--file",
-            type=str,
-            help="Path to input FDX file",
-            default=DEFAULT_SAMPLE_FILE_PATH,
-        )
         subparsers = self.parser.add_subparsers(dest="command", required=True)
 
         run_parser = subparsers.add_parser(
             "run", help="Parse FDX and print a short summary"
         )
         run_parser.add_argument(
-            "-f", "--file", type=str, default=DEFAULT_SAMPLE_FILE_PATH
+            "-f",
+            "--file",
+            type=str,
+            default=DEFAULT_SAMPLE_FILE_PATH,
+            help="Path to input FDX file",
         )
         run_parser.set_defaults(command="run")
 
