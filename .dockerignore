@@ -5,7 +5,6 @@ Dockerfile
 
 schoonmaker/app/app.db
 tests
-samples
 
 /node_modules
 *.DS_Store

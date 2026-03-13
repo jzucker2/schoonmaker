@@ -1,11 +1,13 @@
 services:
-
   schoonmaker:
     container_name: schoonmaker
     build:
       context: .
       dockerfile: Dockerfile
-    command: ['python', 'test.py']
+    command: ["python", "cli.py", "run"]
+    # Override to parse/export: e.g. parse -f /data/script.fdx -o /data/out.json
+    # volumes:
+    #   - ./my-scripts:/data:ro
     restart: on-failure
     stdin_open: true
     tty: true

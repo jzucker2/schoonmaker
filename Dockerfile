@@ -1,19 +1,15 @@
-FROM python:3.13-slim-bookworm AS linux_base
+FROM python:3.13-slim-bookworm
 
-# install deps with `apt-get` (not used here!)
+WORKDIR /app
 
-FROM linux_base AS python_dependencies
-COPY requirements.txt requirements.txt
+# Install runtime deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
+# Application and default sample(s)
+COPY schoonmaker/ schoonmaker/
+COPY cli.py test.py ./
+COPY samples/ samples/
 
-RUN pip install -r requirements.txt
-
-FROM python_dependencies AS source_code
-COPY /schoonmaker /schoonmaker
-
-WORKDIR /schoonmaker
-
-FROM source_code AS run_server
-
-# does this work?
-CMD ["python", "test.py"]
+# Default: parse default sample and print summary
+CMD ["python", "cli.py", "run"]
