@@ -78,7 +78,9 @@ class Lyric:
     meta: dict[str, Any] = field(default_factory=dict)
 
 
-ScreenElement: TypeAlias = Action | DialogueBlock | Transition | Shot | General | Lyric
+ScreenElement: TypeAlias = (
+    Action | DialogueBlock | Transition | Shot | General | Lyric
+)
 
 
 @dataclass

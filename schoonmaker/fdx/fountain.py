@@ -1,6 +1,14 @@
 from __future__ import annotations
 
-from .models import Action, DialogueBlock, General, Lyric, Screenplay, Shot, Transition
+from .models import (
+    Action,
+    DialogueBlock,
+    General,
+    Lyric,
+    Screenplay,
+    Shot,
+    Transition,
+)
 
 
 def screenplay_to_fountain(screenplay: Screenplay) -> str:
@@ -28,7 +36,6 @@ def screenplay_to_fountain(screenplay: Screenplay) -> str:
             lines.extend(_element_to_fountain_lines(el))
             lines.append("")
 
-    # trim trailing blank lines
     while lines and lines[-1] == "":
         lines.pop()
 
@@ -58,7 +65,13 @@ def _element_to_fountain_lines(el: object) -> list[str]:
         out = [el.character]
         for part in el.parts:
             if part.type == "parenthetical":
-                out.append(f"({part.text})" if not (part.text.startswith("(") and part.text.endswith(")")) else part.text)
+                out.append(
+                    f"({part.text})"
+                    if not (
+                        part.text.startswith("(") and part.text.endswith(")")
+                    )
+                    else part.text
+                )
             else:
                 out.append(part.text)
         return out

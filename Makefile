@@ -16,7 +16,7 @@ clean: ## Clean up generated files
 	rm -rf .pytest_cache
 	rm -rf htmlcov
 
-install: ## Install this project's runtime deps (PyYAML only; requirements.txt is sync payload)
+install: ## Install this project's runtime deps
 	pip install -r requirements.txt
 
 install-dev: ## Install development dependencies

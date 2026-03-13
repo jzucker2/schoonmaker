@@ -79,8 +79,9 @@ class FDXParser:
                 ptype = p.type
 
                 def flush_dialogue_block() -> None:
-                    nonlocal pending_character, pending_modifiers, pending_parts
-                    nonlocal pending_para_meta, pending_dual_mode, pending_dual_group
+                    nonlocal pending_character, pending_modifiers
+                    nonlocal pending_parts, pending_para_meta
+                    nonlocal pending_dual_mode, pending_dual_group
                     nonlocal current_scene, screenplay
 
                     if not pending_character:
@@ -98,7 +99,9 @@ class FDXParser:
                         dual=pending_dual_mode,
                         dual_group=pending_dual_group,
                         meta={
-                            "source_paragraphs": [asdict(x) for x in pending_para_meta],
+                            "source_paragraphs": [
+                                asdict(x) for x in pending_para_meta
+                            ],
                         },
                     )
 
@@ -118,7 +121,8 @@ class FDXParser:
                     flush_dialogue_block()
                     heading = SceneHeading(
                         raw=p.raw_text,
-                        scene_number=p.attrs.get("Number") or p.attrs.get("SceneNumber"),
+                        scene_number=p.attrs.get("Number")
+                        or p.attrs.get("SceneNumber"),
                         title=p.scene_properties.get("Title"),
                         page_hint=p.scene_properties.get("Page"),
                         length_hint=p.scene_properties.get("Length"),
@@ -128,12 +132,16 @@ class FDXParser:
                             "script_notes": p.script_notes,
                         },
                     )
-                    current_scene = Scene(id=self._new_id("scene"), heading=heading, meta={})
+                    current_scene = Scene(
+                        id=self._new_id("scene"), heading=heading, meta={}
+                    )
                     screenplay.scenes.append(current_scene)
 
                 elif ptype == "Character":
                     flush_dialogue_block()
-                    name, modifiers = self._split_character_and_modifiers(p.raw_text)
+                    name, modifiers = self._split_character_and_modifiers(
+                        p.raw_text
+                    )
                     pending_character = name
                     pending_modifiers = modifiers
                     pending_para_meta = [p]
@@ -143,48 +151,98 @@ class FDXParser:
 
                 elif ptype == "Parenthetical":
                     if pending_character:
-                        pending_parts.append(DialoguePart(type="parenthetical", text=p.raw_text))
+                        pending_parts.append(
+                            DialoguePart(type="parenthetical", text=p.raw_text)
+                        )
                         pending_para_meta.append(p)
                     else:
                         self._append_element(
                             screenplay,
                             current_scene,
-                            General(text=p.raw_text, meta={"source_paragraph": asdict(p), "orphan_parenthetical": True}),
+                            General(
+                                text=p.raw_text,
+                                meta={
+                                    "source_paragraph": asdict(p),
+                                    "orphan_parenthetical": True,
+                                },
+                            ),
                         )
 
                 elif ptype == "Dialogue":
                     if pending_character:
-                        pending_parts.append(DialoguePart(type="line", text=p.raw_text))
+                        pending_parts.append(
+                            DialoguePart(type="line", text=p.raw_text)
+                        )
                         pending_para_meta.append(p)
                     else:
                         self._append_element(
                             screenplay,
                             current_scene,
-                            General(text=p.raw_text, meta={"source_paragraph": asdict(p), "orphan_dialogue": True}),
+                            General(
+                                text=p.raw_text,
+                                meta={
+                                    "source_paragraph": asdict(p),
+                                    "orphan_dialogue": True,
+                                },
+                            ),
                         )
 
                 elif ptype == "Action":
                     flush_dialogue_block()
-                    self._append_element(screenplay, current_scene, Action(text=p.raw_text, meta={"source_paragraph": asdict(p)}))
+                    self._append_element(
+                        screenplay,
+                        current_scene,
+                        Action(
+                            text=p.raw_text,
+                            meta={"source_paragraph": asdict(p)},
+                        ),
+                    )
 
                 elif ptype == "Transition":
                     flush_dialogue_block()
-                    self._append_element(screenplay, current_scene, Transition(text=p.raw_text, meta={"source_paragraph": asdict(p)}))
+                    self._append_element(
+                        screenplay,
+                        current_scene,
+                        Transition(
+                            text=p.raw_text,
+                            meta={"source_paragraph": asdict(p)},
+                        ),
+                    )
 
                 elif ptype == "Shot":
                     flush_dialogue_block()
-                    self._append_element(screenplay, current_scene, Shot(text=p.raw_text, meta={"source_paragraph": asdict(p)}))
+                    self._append_element(
+                        screenplay,
+                        current_scene,
+                        Shot(
+                            text=p.raw_text,
+                            meta={"source_paragraph": asdict(p)},
+                        ),
+                    )
 
                 elif ptype in {"Lyrics", "Lyric"}:
                     flush_dialogue_block()
-                    self._append_element(screenplay, current_scene, Lyric(text=p.raw_text, meta={"source_paragraph": asdict(p)}))
+                    self._append_element(
+                        screenplay,
+                        current_scene,
+                        Lyric(
+                            text=p.raw_text,
+                            meta={"source_paragraph": asdict(p)},
+                        ),
+                    )
 
                 else:
                     flush_dialogue_block()
                     self._append_element(
                         screenplay,
                         current_scene,
-                        General(text=p.raw_text, meta={"source_paragraph": asdict(p), "unknown_paragraph_type": ptype}),
+                        General(
+                            text=p.raw_text,
+                            meta={
+                                "source_paragraph": asdict(p),
+                                "unknown_paragraph_type": ptype,
+                            },
+                        ),
                     )
 
                 elem.clear()
@@ -196,7 +254,9 @@ class FDXParser:
                 modifiers=pending_modifiers,
                 dual=pending_dual_mode,
                 dual_group=pending_dual_group,
-                meta={"source_paragraphs": [asdict(x) for x in pending_para_meta]},
+                meta={
+                    "source_paragraphs": [asdict(x) for x in pending_para_meta]
+                },
             )
             if current_scene is None:
                 screenplay.preamble.append(block)
@@ -236,7 +296,11 @@ class FDXParser:
             elif ctag == "SceneProperties":
                 scene_properties = dict(child.attrib)
             elif ctag == "ScriptNote":
-                note_text = "".join((t.text or "") for t in child.iter() if self._local_name(t.tag) == "Text")
+                note_text = "".join(
+                    (t.text or "")
+                    for t in child.iter()
+                    if self._local_name(t.tag) == "Text"
+                )
                 if note_text.strip():
                     script_notes.append(note_text.strip())
 
@@ -249,7 +313,9 @@ class FDXParser:
             script_notes=script_notes,
         )
 
-    def _split_character_and_modifiers(self, raw: str) -> tuple[str, list[str]]:
+    def _split_character_and_modifiers(
+        self, raw: str
+    ) -> tuple[str, list[str]]:
         raw = raw.strip()
         modifiers: list[str] = []
         if "(" in raw and raw.endswith(")"):
@@ -268,12 +334,17 @@ class FDXParser:
                 return True
         return False
 
-    def _group_adjacent_dual_dialogue(self, screenplay: Screenplay) -> Screenplay:
-        # Keep flat dialogue blocks by default. This is simpler for analysis.
-        # If you want a wrapper node later, this is the place to build it.
+    def _group_adjacent_dual_dialogue(
+        self, screenplay: Screenplay
+    ) -> Screenplay:
         return screenplay
 
-    def _append_element(self, screenplay: Screenplay, current_scene: Optional[Scene], element: ScreenElement) -> None:
+    def _append_element(
+        self,
+        screenplay: Screenplay,
+        current_scene: Optional[Scene],
+        element: ScreenElement,
+    ) -> None:
         if current_scene is None:
             screenplay.preamble.append(element)
         else:

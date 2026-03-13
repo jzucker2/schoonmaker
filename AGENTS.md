@@ -1,48 +1,70 @@
-# Agent instructions (albion-esphome-admin)
+# Agent instructions (schoonmaker)
 
-This repo is an **admin** project for syncing dependencies and workflow config across multiple local albion-esphome repos.
+This repo is a **Python tool** for working with Final Draft `.fdx` screenplay files. It parses FDX XML, builds a structured model, and can output JSON AST or Fountain text.
 
 ## Layout
 
-- **`repos.yaml`** – List of local repo paths under `repos:` (absolute or relative). Optional **`graybox`** block with `old_ref` and `new_ref`: the script replaces the graybox tag `old_ref` with `new_ref` in any YAML/yml file that contains “graybox” (e.g. package blocks with `ref: 1.3.6`).
-- **`requirements.txt`** – Canonical Python deps (sync payload); copied into each repo by the sync script. Do not use for `pip install` in this repo.
-- **`requirements-runtime.txt`** – This project’s runtime deps (PyYAML only); use for `make install` or minimal venv.
-- **`upgrade-requirements.txt`** – Single line `esphome==X.Y.Z`. That version is written into each repo’s `.github/workflows/build.yml` under `esphome-version:`.
-- **`scripts/sync_requirements.py`** – Script that:
-  1. Reads `repos.yaml` and finds project root (directory containing `repos.yaml`).
-  2. Copies this repo’s `requirements.txt` into each listed repo (overwrites their `requirements.txt`).
-  3. Reads esphome version from `upgrade-requirements.txt` and updates `esphome-version:` in each repo’s `.github/workflows/build.yml` (if that file exists).
-  4. If `graybox.old_ref` and `graybox.new_ref` are set in `repos.yaml`, replaces that tag in each repo in any YAML/yml file that contains “graybox” (whole-token replacement, e.g. `ref: 1.3.6` → `ref: 1.3.7`).
-- **`tests/`** – Unit tests for the sync script (unittest, no pytest). **When adding or changing script behavior, add or update unit tests and keep README/AGENTS.md in sync.**
+- **`schoonmaker/`** – Main package.
+  - **`parser.py`** – Low-level FDX parsing (ElementTree, naive parse of Content/Paragraph).
+  - **`element.py`**, **`element_tag.py`**, **`element_type.py`**, **`element_attribute.py`** – XML element wrappers and FDX enums.
+  - **`fdx/`** – FDX-to-AST and export subpackage:
+    - **`models.py`** – Dataclasses for Screenplay, Scene, SceneHeading, DialogueBlock, Action, Transition, etc.
+    - **`parser.py`** – `FDXParser`: streaming-ish parser that produces `Screenplay` from an FDX path.
+    - **`fountain.py`** – `screenplay_to_fountain(screenplay)` for FDX → Fountain text.
+  - **`cli_arg_parser.py`** – CLI argument parsing (file path, subcommands).
+  - **`utils.py`** – Logging helpers.
+- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain` (see Commands).
+- **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
+- **`samples/`** – Sample FDX files for manual use.
+- **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
+- **`requirements-dev.txt`** – Dev deps: black, flake8, pytest, pytest-cov, pre-commit, etc.
+- **`Makefile`** – `make test`, `make check`, `make format`, `make lint`, `make ci-check`.
+- **`.flake8`**, **`.pre-commit-config.yaml`** – Lint and pre-commit config. **`.yamllint`** – YAML style (2-space indent, no `---`).
 
 ## Environment
 
 Use the **existing local venv** at the repo root:
 
 - Activate: `source venv/bin/activate` (macOS/Linux) or `venv\Scripts\activate` (Windows).
-- Run script: `python scripts/sync_requirements.py` (or `venv/bin/python scripts/sync_requirements.py` without activating).
-- Run tests: `python -m unittest discover -s tests -v` (from repo root, with venv so PyYAML is available).
+- Run CLI: `python cli.py …` (or `venv/bin/python cli.py …` without activating).
+- Run tests: `make test` (pytest) or `pytest -v` from repo root with venv active.
 
-If the venv is missing or broken: `python -m venv venv` then `venv/bin/pip install -r requirements-runtime.txt` (or `requirements-dev.txt` for tests/lint).
+If the venv is missing or broken: `python -m venv venv` then `venv/bin/pip install -r requirements-dev.txt`.
 
 ## Commands (from repo root, with venv)
 
 ```bash
-# Sync all repos (writes requirements.txt + build.yml esphome-version)
-python scripts/sync_requirements.py
+# Run default “naive” parse (logs Content/Paragraph traversal)
+python cli.py run -f path/to/script.fdx
 
-# Preview only (no file writes)
-python scripts/sync_requirements.py --dry-run
+# Emit FDX → JSON AST to stdout
+python cli.py parse -f path/to/script.fdx
 
-# Run unit tests
-python -m unittest discover -s tests -v
+# Write JSON AST to a file
+python cli.py parse -f path/to/script.fdx -o script.json
 
-# Pre-commit (use venv: venv/bin/pre-commit or activate first)
-venv/bin/pre-commit run --all-files
+# Emit FDX → Fountain to stdout
+python cli.py fountain -f path/to/script.fdx
+
+# Write Fountain to a file
+python cli.py fountain -f path/to/script.fdx -o script.fountain
+
+# Run tests
+make test
+
+# Format and lint
+make format
+make check
+
+# Pre-commit on all files
+make pre-commit-run
+
+# Full CI-style check (pre-commit + tests)
+make ci-check
 ```
 
 ## Conventions
 
-- **YAML:** Repo uses `.yamllint`; prefer 2-space indent, no document-start `---`.
-- **Python:** Script is 3.9+ (uses `list[Path]`, `str | None`). No pytest; tests use `unittest` and temp files.
-- **When changing the sync script or config:** Add or update **unit tests** in `tests/` for the new or modified behavior, and update **README** (and this **AGENTS.md**) so usage and config are documented.
+- **YAML:** Use `.yamllint`; prefer 2-space indent, no document-start `---`.
+- **Python:** 3.9+ (e.g. `list[...]`, `str | None`). Tests use **pytest**; put fixtures in **`tests/fixtures/`** and reference them from tests (e.g. `Path(__file__).parent / "fixtures" / "sample.fdx"`).
+- **When adding or changing behavior:** Add or update tests in `tests/`, keep **README** and this **AGENTS.md** in sync.

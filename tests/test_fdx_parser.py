@@ -1,16 +1,10 @@
-from __future__ import annotations
+"""Tests for schoonmaker.fdx parser and Fountain export."""
 
-from pathlib import Path
-
-from fdx_tooling.fountain import screenplay_to_fountain
-from fdx_tooling.parser import FDXParser
+from schoonmaker.fdx import FDXParser, screenplay_to_fountain
 
 
-FIXTURE = Path(__file__).parent / "fixtures" / "sample.fdx"
-
-
-def test_parse_basic_structure() -> None:
-    screenplay = FDXParser().parse(str(FIXTURE))
+def test_parse_basic_structure(sample_fdx_path):
+    screenplay = FDXParser().parse(str(sample_fdx_path))
 
     assert screenplay.document_type == "Script"
     assert screenplay.version == "3"
@@ -28,15 +22,21 @@ def test_parse_basic_structure() -> None:
     assert first.elements[1].type == "dialogue_block"
     assert first.elements[1].character == "JOHN"
     assert first.elements[1].modifiers == ["V.O."]
-    assert [p.type for p in first.elements[1].parts] == ["parenthetical", "line"]
-    assert [p.text for p in first.elements[1].parts] == ["whispering", "Hello?"]
+    assert [p.type for p in first.elements[1].parts] == [
+        "parenthetical",
+        "line",
+    ]
+    assert [p.text for p in first.elements[1].parts] == [
+        "whispering",
+        "Hello?",
+    ]
 
     assert first.elements[2].type == "transition"
     assert first.elements[2].text == "CUT TO:"
 
 
-def test_convert_to_fountain() -> None:
-    screenplay = FDXParser().parse(str(FIXTURE))
+def test_convert_to_fountain(sample_fdx_path):
+    screenplay = FDXParser().parse(str(sample_fdx_path))
     fountain = screenplay_to_fountain(screenplay)
 
     assert "INT. APARTMENT - NIGHT #1#" in fountain

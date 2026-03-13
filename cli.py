@@ -1,28 +1,62 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
 from schoonmaker.utils import set_up_logging, get_logger
 from schoonmaker.cli_arg_parser import CLIArgParser
 from schoonmaker.parser import Parser
+from dataclasses import asdict
 
+from schoonmaker.fdx import FDXParser, screenplay_to_fountain
 
 set_up_logging()
 log = get_logger(__name__)
 
 
-def run():
-    cli_args = CLIArgParser.get_cli_args()
-    log.info(f"cli_args: {cli_args}")
+def _write_output(text: str, output: str | None) -> int:
+    if output:
+        Path(output).write_text(text, encoding="utf-8")
+    else:
+        sys.stdout.write(text)
+    return 0
+
+
+def run_naive(args) -> int:
     parser = Parser()
-    file_name = cli_args.file
-    log.info(f"got cli file_name: {file_name}")
-    parser.naive_parse(file_name)
+    parser.naive_parse(args.file)
     log.info("done with `run`")
+    return 0
 
 
-def main():
-    log.info("Begin `main` function")
-    run()
-    log.info("end of `main` function")
+def run_parse(args) -> int:
+    screenplay = FDXParser().parse(args.file)
+    payload = json.dumps(asdict(screenplay), indent=2, ensure_ascii=False)
+    return _write_output(payload + "\n", getattr(args, "output", None))
+
+
+def run_fountain(args) -> int:
+    screenplay = FDXParser().parse(args.file)
+    payload = screenplay_to_fountain(screenplay)
+    return _write_output(payload, getattr(args, "output", None))
+
+
+def main() -> int:
+    args = CLIArgParser.get_cli_args()
+    log.info("cli_args: %s", args)
+
+    if args.command == "run":
+        return run_naive(args)
+    if args.command == "parse":
+        return run_parse(args)
+    if args.command == "fountain":
+        return run_fountain(args)
+
+    log.error("Unknown command: %s", args.command)
+    return 2
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
