@@ -18,6 +18,7 @@ from .models import (
     ScreenElement,
     Screenplay,
     Shot,
+    TitlePageField,
     Transition,
 )
 
@@ -52,26 +53,60 @@ class FDXParser:
 
         in_content = False
         content_depth = 0
+        in_title_page = False
+        stack: list[str] = []
 
         context = ET.iterparse(path, events=("start", "end"))
         for event, elem in context:
             tag = self._local_name(elem.tag)
 
-            if event == "start" and tag == "Content":
-                in_content = True
-                content_depth += 1
-                continue
+            if event == "start":
+                if tag == "Content":
+                    parent = stack[-1] if stack else None
+                    if parent == "FinalDraft":
+                        in_content = True
+                        content_depth += 1
+                    elif parent == "TitlePage":
+                        in_title_page = True
+                stack.append(tag)
+                if tag == "Content":
+                    continue
 
-            if event == "end" and tag == "Content":
-                content_depth -= 1
-                if content_depth <= 0:
-                    in_content = False
-                elem.clear()
-                continue
+            if event == "end":
+                if tag == "Content":
+                    if in_title_page:
+                        in_title_page = False
+                    else:
+                        content_depth -= 1
+                        if content_depth <= 0:
+                            in_content = False
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                if not in_content and not in_title_page:
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                if in_title_page and tag == "Paragraph":
+                    p = self._parse_paragraph(elem)
+                    if p.raw_text.strip():
+                        screenplay.title_page.append(
+                            TitlePageField(label=None, text=p.raw_text.strip())
+                        )
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                if in_title_page:
+                    stack.pop()
+                    continue
 
             if not in_content:
                 if event == "end":
                     elem.clear()
+                    stack.pop()
                 continue
 
             if event == "end" and tag == "Paragraph":
@@ -319,6 +354,9 @@ class FDXParser:
                     )
 
                 elem.clear()
+
+            if event == "end":
+                stack.pop()
 
         self._flush_pending_dialogue(
             screenplay,
