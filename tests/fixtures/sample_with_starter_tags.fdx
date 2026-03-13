@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<FinalDraft DocumentType="Script" Template="No" Version="3">
+  <Content>
+    <Paragraph Type="Scene Heading" Number="1">
+      <Text>INT. ROOM - DAY</Text>
+    </Paragraph>
+    <Paragraph Type="Action">
+      <Text>Action.</Text>
+    </Paragraph>
+  </Content>
+  <SmartType>
+    <Characters>
+      <Character>ALICE</Character>
+      <Character>BOB</Character>
+    </Characters>
+    <Extensions>
+      <Extension>(V.O.)</Extension>
+    </Extensions>
+  </SmartType>
+  <Revisions ActiveSet="1" RevisionMode="No" RevisionsShown="Active">
+    <Revision ID="1" Name="Blue Rev." Mark="*"/>
+    <Revision ID="2" Name="Pink Rev." Mark="*"/>
+  </Revisions>
+  <Characters>
+    <CharacterTraitData>
+      <Holders>
+        <Holder Name="ALICE"/>
+        <Holder Name="BOB"/>
+      </Holders>
+    </CharacterTraitData>
+  </Characters>
+  <ScriptNotes>
+    <ScriptNote Id="1" Name="Note One" Range="0,10" Type="Producer" WriterName="Test">
+      <Paragraph>
+        <Text>First script note text.</Text>
+      </Paragraph>
+    </ScriptNote>
+  </ScriptNotes>
+</FinalDraft>

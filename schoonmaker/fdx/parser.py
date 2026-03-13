@@ -29,10 +29,14 @@ class FDXParser:
 
     Design choices:
     - parse /FinalDraft/Content/Paragraph for screenplay semantics
+    - parse /FinalDraft/TitlePage/Content/Paragraph for title page
     - preserve paragraph attributes and scene properties as metadata
     - group Character + Parenthetical + Dialogue into DialogueBlock
     - treat unknown paragraph types as General
     - treat page/layout hints as metadata, not as structure
+
+    Also parses Revisions, SmartType, Characters (top-level), ScriptNotes.
+    Other tags: see notes/FDX_TODO.md.
     """
 
     def parse(self, path: str) -> Screenplay:
@@ -77,15 +81,57 @@ class FDXParser:
                     if in_title_page:
                         in_title_page = False
                     else:
-                        content_depth -= 1
-                        if content_depth <= 0:
-                            in_content = False
+                        # Only decrement for Content that we incremented:
+                        # direct child of FinalDraft (nested Content e.g. under
+                        # ListItem never incremented).
+                        content_parent = stack[-2] if len(stack) >= 2 else None
+                        if content_parent == "FinalDraft":
+                            content_depth -= 1
+                            assert (
+                                content_depth >= 0
+                            ), "Content depth went negative"
+                            if content_depth <= 0:
+                                in_content = False
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                parent_is_final_draft = (
+                    len(stack) >= 2 and stack[-2] == "FinalDraft"
+                )
+                if tag == "Revisions" and parent_is_final_draft:
+                    screenplay.revisions = self._parse_revisions_elem(elem)
+                    elem.clear()
+                    stack.pop()
+                    continue
+                if tag == "SmartType" and parent_is_final_draft:
+                    screenplay.smart_type = self._parse_smart_type_elem(elem)
+                    elem.clear()
+                    stack.pop()
+                    continue
+                if tag == "Characters" and parent_is_final_draft:
+                    screenplay.characters = self._parse_characters_elem(elem)
+                    elem.clear()
+                    stack.pop()
+                    continue
+                if tag == "ScriptNotes" and parent_is_final_draft:
+                    screenplay.script_notes = self._parse_script_notes_elem(
+                        elem
+                    )
                     elem.clear()
                     stack.pop()
                     continue
 
                 if not in_content and not in_title_page:
-                    elem.clear()
+                    collectible = (
+                        "Revisions",
+                        "SmartType",
+                        "Characters",
+                        "ScriptNotes",
+                    )
+                    in_collectible = any(s in stack for s in collectible)
+                    if not in_collectible:
+                        elem.clear()
                     stack.pop()
                     continue
 
@@ -511,6 +557,114 @@ class FDXParser:
 
     def _new_id(self, prefix: str) -> str:
         return f"{prefix}-{uuid.uuid4().hex[:10]}"
+
+    def _parse_revisions_elem(self, elem: ET.Element) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        for child in elem:
+            if self._local_name(child.tag) == "Revision":
+                out.append(dict(child.attrib))
+        return out
+
+    def _parse_smart_type_elem(self, elem: ET.Element) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for section in elem:
+            stag = self._local_name(section.tag)
+            if stag == "Characters":
+                result["characters"] = []
+                for c in section.iter():
+                    if self._local_name(c.tag) != "Character":
+                        continue
+                    text = (c.text or "").strip()
+                    if not text and len(c):
+                        text = "".join(
+                            t.text or ""
+                            for t in c
+                            if self._local_name(t.tag) == "Text"
+                        ).strip()
+                    if text:
+                        result["characters"].append(text)
+            elif stag == "Extensions":
+                result["extensions"] = []
+                for e in section.iter():
+                    if self._local_name(e.tag) != "Extension":
+                        continue
+                    text = (e.text or "").strip()
+                    if not text and len(e):
+                        text = "".join(
+                            t.text or ""
+                            for t in e
+                            if self._local_name(t.tag) == "Text"
+                        ).strip()
+                    if text:
+                        result["extensions"].append(text)
+            elif stag == "SceneIntros":
+                result["scene_intros"] = [
+                    (s.text or "").strip()
+                    for s in section
+                    if self._local_name(s.tag) == "SceneIntro"
+                    and (s.text or "").strip()
+                ]
+            elif stag == "Locations":
+                result["locations"] = [
+                    (loc.text or "").strip()
+                    for loc in section
+                    if self._local_name(loc.tag) == "Location"
+                    and (loc.text or "").strip()
+                ]
+            elif stag == "TimesOfDay":
+                result["times_of_day"] = [
+                    (t.text or "").strip()
+                    for t in section
+                    if self._local_name(t.tag) == "TimeOfDay"
+                    and (t.text or "").strip()
+                ]
+            elif stag == "Transitions":
+                result["transitions"] = [
+                    (tr.text or "").strip()
+                    for tr in section
+                    if self._local_name(tr.tag) == "Transition"
+                    and (tr.text or "").strip()
+                ]
+        return result
+
+    def _parse_characters_elem(self, elem: ET.Element) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        for child in elem:
+            if self._local_name(child.tag) != "CharacterTraitData":
+                continue
+            for holders in child:
+                if self._local_name(holders.tag) != "Holders":
+                    continue
+                for h in holders:
+                    if self._local_name(h.tag) == "Holder":
+                        entry = dict(h.attrib)
+                        if entry:
+                            out.append(entry)
+                break
+            break
+        if not out:
+            for char_elem in elem:
+                if self._local_name(char_elem.tag) == "Character":
+                    name = (char_elem.text or "").strip()
+                    if name:
+                        out.append({"Name": name})
+        return out
+
+    def _parse_script_notes_elem(
+        self, elem: ET.Element
+    ) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        for note in elem:
+            if self._local_name(note.tag) != "ScriptNote":
+                continue
+            entry = dict(note.attrib)
+            texts: list[str] = []
+            for p in note.iter():
+                if self._local_name(p.tag) == "Text" and p.text:
+                    texts.append(p.text)
+            entry["text"] = " ".join(texts).strip()
+            out.append(entry)
+        return out
 
     def _local_name(self, tag: str) -> str:
         return tag.split("}", 1)[-1]

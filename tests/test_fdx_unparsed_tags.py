@@ -1,0 +1,60 @@
+"""FDX Revisions, SmartType, Characters, ScriptNotes parsing tests."""
+
+from pathlib import Path
+
+from schoonmaker.fdx import FDXParser
+
+FIXTURE_WITH_STARTER_TAGS = (
+    Path(__file__).parent / "fixtures" / "sample_with_starter_tags.fdx"
+)
+
+
+def test_parse_fdx_with_unparsed_tags_succeeds():
+    """Smoke: FDX with Revisions, SmartType, etc. parses OK."""
+    assert FIXTURE_WITH_STARTER_TAGS.exists(), "need fixture"
+    screenplay = FDXParser().parse(str(FIXTURE_WITH_STARTER_TAGS))
+    assert screenplay is not None
+    assert screenplay.document_type == "Script"
+    assert len(screenplay.scenes) >= 1
+    assert screenplay.scenes[0].heading.raw == "INT. ROOM - DAY"
+
+
+def test_parse_revisions():
+    """screenplay.revisions is a list of revision defs (ID, Name, Mark)."""
+    screenplay = FDXParser().parse(str(FIXTURE_WITH_STARTER_TAGS))
+    assert len(screenplay.revisions) >= 1
+    first = screenplay.revisions[0]
+    assert "Name" in first or "name" in first
+    name = first.get("Name") or first.get("name")
+    assert name == "Blue Rev."
+
+
+def test_parse_smart_type():
+    """smart_type has characters, extensions (and optionally scene_intros)."""
+    screenplay = FDXParser().parse(str(FIXTURE_WITH_STARTER_TAGS))
+    st = screenplay.smart_type
+    assert "characters" in st
+    chars = st["characters"]
+    assert "ALICE" in chars
+    assert "BOB" in chars
+    assert "extensions" in st
+    assert "(V.O.)" in st["extensions"]
+
+
+def test_parse_characters():
+    """characters is list of entries (Name from Holder, optional attrs)."""
+    screenplay = FDXParser().parse(str(FIXTURE_WITH_STARTER_TAGS))
+    assert len(screenplay.characters) >= 1
+    names = [c.get("Name") or c.get("name") for c in screenplay.characters]
+    assert "ALICE" in names
+    assert "BOB" in names
+
+
+def test_parse_script_notes():
+    """script_notes is list of note entries (Name, Range, Type, text)."""
+    screenplay = FDXParser().parse(str(FIXTURE_WITH_STARTER_TAGS))
+    assert len(screenplay.script_notes) >= 1
+    first = screenplay.script_notes[0]
+    assert first.get("Name") == "Note One" or first.get("name") == "Note One"
+    text = first.get("text") or ""
+    assert "First script note" in text
