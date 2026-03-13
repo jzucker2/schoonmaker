@@ -17,7 +17,7 @@ clean: ## Clean up generated files
 	rm -rf htmlcov
 
 install: ## Install this project's runtime deps (PyYAML only; requirements.txt is sync payload)
-	pip install -r requirements-runtime.txt
+	pip install -r requirements.txt
 
 install-dev: ## Install development dependencies
 	pip install -r requirements-dev.txt
