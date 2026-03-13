@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<FinalDraft DocumentType="Script" Template="No" Version="3">
+  <Content>
+    <Paragraph Type="Scene Heading" Number="1">
+      <Text>INT. APARTMENT - NIGHT</Text>
+      <SceneProperties Length="2/8" Page="1" Title="Opening" />
+    </Paragraph>
+    <Paragraph Type="Action">
+      <Text>John </Text>
+      <Text Style="Bold">slams</Text>
+      <Text> the door.</Text>
+    </Paragraph>
+    <Paragraph Type="Character">
+      <Text>JOHN (V.O.)</Text>
+    </Paragraph>
+    <Paragraph Type="Parenthetical">
+      <Text>whispering</Text>
+    </Paragraph>
+    <Paragraph Type="Dialogue">
+      <Text>Hello?</Text>
+    </Paragraph>
+    <Paragraph Type="Transition">
+      <Text>CUT TO:</Text>
+    </Paragraph>
+    <Paragraph Type="Scene Heading" Number="2">
+      <Text>EXT. STREET - LATER</Text>
+    </Paragraph>
+    <Paragraph Type="General">
+      <Text></Text>
+    </Paragraph>
+  </Content>
+</FinalDraft>
