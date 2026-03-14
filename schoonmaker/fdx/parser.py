@@ -35,8 +35,9 @@ class FDXParser:
     - treat unknown paragraph types as General
     - treat page/layout hints as metadata, not as structure
 
-    Also parses Revisions, SmartType, Characters (top-level), ScriptNotes.
-    Other tags: see notes/FDX_TODO.md.
+    Also parses Revisions, SmartType, Characters (top-level), ScriptNotes,
+    DocumentRef, AltCollection, TargetScriptLength. Other tags: see
+    notes/FDX_TODO.md.
     """
 
     def parse(self, path: str) -> Screenplay:
@@ -78,13 +79,13 @@ class FDXParser:
 
             if event == "end":
                 if tag == "Content":
-                    if in_title_page:
+                    content_parent = stack[-2] if len(stack) >= 2 else None
+                    if in_title_page and content_parent == "TitlePage":
                         in_title_page = False
-                    else:
+                    elif content_parent != "TitlePage":
                         # Only decrement for Content that we incremented:
                         # direct child of FinalDraft (nested Content e.g. under
                         # ListItem never incremented).
-                        content_parent = stack[-2] if len(stack) >= 2 else None
                         if content_parent == "FinalDraft":
                             content_depth -= 1
                             assert (
@@ -121,6 +122,27 @@ class FDXParser:
                     elem.clear()
                     stack.pop()
                     continue
+                if tag == "DocumentRef" and parent_is_final_draft:
+                    screenplay.document_ref.append(
+                        self._parse_document_ref_elem(elem)
+                    )
+                    elem.clear()
+                    stack.pop()
+                    continue
+                if tag == "AltCollection" and parent_is_final_draft:
+                    screenplay.alt_collection = (
+                        self._parse_alt_collection_elem(elem)
+                    )
+                    elem.clear()
+                    stack.pop()
+                    continue
+                if tag == "TargetScriptLength" and parent_is_final_draft:
+                    screenplay.target_script_length = (
+                        self._parse_target_script_length_elem(elem)
+                    )
+                    elem.clear()
+                    stack.pop()
+                    continue
 
                 if not in_content and not in_title_page:
                     collectible = (
@@ -128,6 +150,9 @@ class FDXParser:
                         "SmartType",
                         "Characters",
                         "ScriptNotes",
+                        "DocumentRef",
+                        "AltCollection",
+                        "TargetScriptLength",
                     )
                     in_collectible = any(s in stack for s in collectible)
                     if not in_collectible:
@@ -564,6 +589,35 @@ class FDXParser:
             if self._local_name(child.tag) == "Revision":
                 out.append(dict(child.attrib))
         return out
+
+    def _parse_document_ref_elem(self, elem: ET.Element) -> dict[str, Any]:
+        """Parse a single DocumentRef element under FinalDraft (attribs)."""
+        return dict(elem.attrib)
+
+    def _parse_alt_collection_elem(
+        self, elem: ET.Element
+    ) -> list[dict[str, Any]]:
+        """Parse AltCollection: list of Alt entries (Id + text from Paragraph)."""  # noqa: E501
+        out: list[dict[str, Any]] = []
+        for child in elem:
+            if self._local_name(child.tag) != "Alt":
+                continue
+            entry: dict[str, Any] = dict(child.attrib)
+            texts: list[str] = []
+            for p in child.iter():
+                if self._local_name(p.tag) == "Text" and p.text:
+                    texts.append(p.text)
+            if texts:
+                entry["text"] = "".join(texts).strip()
+            out.append(entry)
+        return out
+
+    def _parse_target_script_length_elem(
+        self, elem: ET.Element
+    ) -> Optional[str]:
+        """Parse TargetScriptLength: element text (e.g. page count)."""
+        text = (elem.text or "").strip()
+        return text if text else None
 
     def _parse_smart_type_elem(self, elem: ET.Element) -> dict[str, Any]:
         result: dict[str, Any] = {}

@@ -1,12 +1,15 @@
-"""FDX Revisions, SmartType, Characters, ScriptNotes parsing tests."""
+"""FDX Revisions, SmartType, Characters, ScriptNotes, DocumentRef, AltCollection, TargetScriptLength tests."""  # noqa: E501
 
 from pathlib import Path
 
 from schoonmaker.fdx import FDXParser
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
 FIXTURE_WITH_STARTER_TAGS = (
     Path(__file__).parent / "fixtures" / "sample_with_starter_tags.fdx"
 )
+SAMPLE_FDX12 = REPO_ROOT / "samples" / "final_draft_12_sample.fdx"
+SAMPLE_FDX13 = REPO_ROOT / "samples" / "final_draft_13_sample.fdx"
 
 
 def test_parse_fdx_with_unparsed_tags_succeeds():
@@ -58,3 +61,38 @@ def test_parse_script_notes():
     assert first.get("Name") == "Note One" or first.get("name") == "Note One"
     text = first.get("text") or ""
     assert "First script note" in text
+
+
+def test_parse_document_ref_fdx13_has_ref():
+    """FDX 13 sample has DocumentRef (optional in FDX 13+, not in 12)."""
+    assert SAMPLE_FDX13.exists(), "need samples/final_draft_13_sample.fdx"
+    screenplay = FDXParser().parse(str(SAMPLE_FDX13))
+    assert len(screenplay.document_ref) >= 1
+    ref = screenplay.document_ref[0]
+    assert ref.get("id") or ref.get("Id")
+    assert ref.get("DateTime") or ref.get("datetime")
+
+
+def test_parse_document_ref_fdx12_empty():
+    """FDX 12 sample has no DocumentRef; list is empty."""
+    assert SAMPLE_FDX12.exists(), "need samples/final_draft_12_sample.fdx"
+    screenplay = FDXParser().parse(str(SAMPLE_FDX12))
+    assert screenplay.document_ref == []
+
+
+def test_parse_alt_collection():
+    """alt_collection is list of Alt entries (Id + text from Paragraph/Text)."""  # noqa: E501
+    assert SAMPLE_FDX12.exists(), "need samples/final_draft_12_sample.fdx"
+    screenplay = FDXParser().parse(str(SAMPLE_FDX12))
+    assert len(screenplay.alt_collection) >= 1
+    first = screenplay.alt_collection[0]
+    assert first.get("Id") or first.get("id")
+    assert "text" in first
+    assert "Better checkity-check yourself" in first["text"]
+
+
+def test_parse_target_script_length():
+    """target_script_length is element text (e.g. page count)."""
+    assert SAMPLE_FDX12.exists(), "need samples/final_draft_12_sample.fdx"
+    screenplay = FDXParser().parse(str(SAMPLE_FDX12))
+    assert screenplay.target_script_length == "30"

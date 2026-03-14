@@ -77,3 +77,12 @@ def test_convert_to_fountain(sample_fdx_path):
     assert "Hello?" in fountain
     assert "> CUT TO:" in fountain
     assert "EXT. STREET - LATER #2#" in fountain
+
+
+def test_parse_fdx13_sample(sample_fdx13_path):
+    """Parse FDX 13 sample (samples/final_draft_13_sample.fdx)."""
+    screenplay = FDXParser().parse(str(sample_fdx13_path))
+    assert screenplay.document_type == "Script"
+    assert screenplay.version == "6"
+    assert len(screenplay.document_ref) >= 1
+    assert len(screenplay.scenes) >= 1
