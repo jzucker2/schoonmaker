@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<FinalDraft DocumentType="Script" Template="No" Version="3">
+  <Content>
+    <Paragraph Type="Action">
+      <Text>Preamble action line.</Text>
+    </Paragraph>
+    <Paragraph Type="Scene Heading" Number="1">
+      <Text>INT. ROOM - DAY</Text>
+    </Paragraph>
+    <Paragraph Type="Action">
+      <Text>In-scene action.</Text>
+    </Paragraph>
+  </Content>
+</FinalDraft>

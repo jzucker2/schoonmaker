@@ -39,6 +39,7 @@ def test_metadata_with_flag_includes_metadata(sample_fdx_path, tmp_path):
     assert "scenes_count" in meta
     assert "elements" in meta
     assert "characters" in meta
+    assert "preamble" in meta
     assert "scenes" in meta
     assert "total_action_count" in meta
     assert "total_dialogue_block_count" in meta
@@ -64,6 +65,9 @@ def test_metadata_with_flag_includes_metadata(sample_fdx_path, tmp_path):
     assert "total_words" in meta
     assert "total_paragraphs_count" in meta
     assert meta["scenes_count"] == len(data["scenes"])
+    assert "action_count" in meta["preamble"]
+    assert "dialogue_block_count" in meta["preamble"]
+    assert "dialogue_line_count" in meta["preamble"]
 
 
 def test_metadata_compute_screenplay(sample_fdx_path):
@@ -153,20 +157,40 @@ def test_metadata_word_counts_accuracy(sample_fdx_path):
     )
 
 
+def test_metadata_preamble_included_in_totals():
+    """Totals include preamble; preamble + scenes sum to totals."""
+    path = Path(__file__).parent / "fixtures" / "sample_with_preamble.fdx"
+    assert path.exists()
+    screenplay = FDXParser().parse(str(path))
+    meta = compute_screenplay_metadata(screenplay)
+    assert meta["preamble"]["action_count"] == 1
+    assert len(meta["scenes"]) == 1
+    assert meta["scenes"][0]["action_count"] == 1
+    assert meta["total_action_count"] == 2
+    assert (
+        meta["preamble"]["action_count"]
+        + sum(s["action_count"] for s in meta["scenes"])
+        == meta["total_action_count"]
+    )
+
+
 def test_metadata_aggregates_match_per_scene_and_elements(sample_fdx_path):
-    """Totals match sum of per-scene; total_paragraphs matches element sum."""
+    """Totals match preamble + sum of per-scene; total_paragraphs matches."""
     screenplay = FDXParser().parse(str(sample_fdx_path))
     meta = compute_screenplay_metadata(screenplay)
-    # total_* should match sum over scenes
-    assert meta["total_action_count"] == sum(
+    pre = meta["preamble"]
+    # total_* = preamble + sum over scenes
+    assert meta["total_action_count"] == pre["action_count"] + sum(
         s["action_count"] for s in meta["scenes"]
     )
-    assert meta["total_dialogue_block_count"] == sum(
+    block_total = pre["dialogue_block_count"] + sum(
         s["dialogue_block_count"] for s in meta["scenes"]
     )
-    assert meta["total_dialogue_line_count"] == sum(
+    assert meta["total_dialogue_block_count"] == block_total
+    line_total = pre["dialogue_line_count"] + sum(
         s["dialogue_line_count"] for s in meta["scenes"]
     )
+    assert meta["total_dialogue_line_count"] == line_total
     # total_paragraphs_count = sum of element-type counts (paragraph elements)
     expected_paragraphs = (
         meta["elements"]["action"]

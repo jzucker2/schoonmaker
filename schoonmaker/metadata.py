@@ -145,13 +145,18 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
         return scene_action, scene_dialogue_block, scene_dialogue_line
 
     # Preamble (counts go into elements_by_type and by_character)
-    process_elements(
+    pa, pdb, pdl = process_elements(
         screenplay.preamble,
         set(),
         0,
         0,
         0,
     )
+    preamble = {
+        "action_count": pa,
+        "dialogue_block_count": pdb,
+        "dialogue_line_count": pdl,
+    }
 
     for scene in screenplay.scenes:
         scene_characters = set()
@@ -325,6 +330,7 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
         "scenes_count": len(screenplay.scenes),
         "elements": elements_by_type,
         "characters": by_character,
+        "preamble": preamble,
         "scenes": scenes_detail,
         "total_action_count": elements_by_type["action"],
         "total_dialogue_block_count": elements_by_type["dialogue_block"],
