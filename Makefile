@@ -22,13 +22,13 @@ install: ## Install this project's runtime deps
 install-dev: ## Install development dependencies
 	pip install -r requirements-dev.txt
 
-format: ## Format code with black (fix in place)
+format: ## Format code with black (fix in place). Then run 'make lint' — black may leave lines >79 chars; flake8 E501 requires all lines ≤79.
 	black schoonmaker/ tests/ --line-length=79
 
 format-check: ## Check formatting with black (no fix, fails if invalid)
 	black schoonmaker/ tests/ --line-length=79 --check
 
-lint: ## Lint code with flake8
+lint: ## Lint with flake8 (E501: max line length 79). Run after 'make format' to catch long comments/docstrings.
 	flake8 schoonmaker/ tests/
 
 check: format-check lint ## Run all checks (format check + lint, no auto-fix)

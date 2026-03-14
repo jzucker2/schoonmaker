@@ -24,6 +24,8 @@ class ParagraphInfo:
     attrs: dict[str, str] = field(default_factory=dict)
     scene_properties: dict[str, Any] = field(default_factory=dict)
     script_notes: list[str] = field(default_factory=list)
+    # In-paragraph <Alts Current="..."><AltId>...</AltId>...</Alts> if present
+    alts: Optional[dict[str, Any]] = None
 
 
 @dataclass

@@ -10,8 +10,9 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
     - **`parser.py`** – `FDXParser`: streaming-ish parser that produces `Screenplay` from an FDX path.
     - **`fountain.py`** – `screenplay_to_fountain(screenplay)` for FDX → Fountain text.
   - **`cli_arg_parser.py`** – CLI argument parsing (file path, subcommands).
+  - **`metadata.py`** – `compute_screenplay_metadata(screenplay)` for scene/character/line stats (used when `parse --metadata`).
   - **`utils.py`** – Logging helpers.
-- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain` (see Commands).
+- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain` (see Commands). Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `--checksum`, adds a `checksums` object (SHA-256 per section).
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
@@ -43,6 +44,12 @@ python cli.py parse -f path/to/script.fdx
 # Write JSON AST to a file
 python cli.py parse -f path/to/script.fdx -o script.json
 
+# Include computed metadata (scene/character/line counts) in the JSON
+python cli.py parse -f path/to/script.fdx -o script.json --metadata
+
+# Add SHA-256 checksums for sections to JSON (for easier diffing)
+python cli.py parse -f path/to/script.fdx -o script.json --checksum
+
 # Emit FDX → Fountain to stdout
 python cli.py fountain -f path/to/script.fdx
 
@@ -52,8 +59,9 @@ python cli.py fountain -f path/to/script.fdx -o script.fountain
 # Run tests
 make test
 
-# Format and lint
+# Format and lint (run both before committing)
 make format
+make lint
 make check
 
 # Pre-commit on all files
@@ -67,6 +75,7 @@ make ci-check
 
 - **YAML:** Use `.yamllint`; prefer 2-space indent, no document-start `---`.
 - **Python:** 3.9+ (e.g. `list[...]`, `str | None`). Tests use **pytest**; put fixtures in **`tests/fixtures/`** and reference them from tests (e.g. `Path(__file__).parent / "fixtures" / "sample.fdx"`).
+- **Format and lint:** Black (`make format`) uses `--line-length=79` but does **not** shorten every long line (e.g. comments and docstrings are often left as-is). Flake8 E501 fails on **any** line over 79 characters. So after `make format`, run **`make lint`** (or `make check`); fix any E501 by shortening those lines (break or reword comments/docstrings) so both format and lint pass.
 - **When adding or changing behavior:**
   - Keep **README** and this **AGENTS.md** in sync; update README when CLI, layout, or usage changes.
   - Add or update tests in **`tests/`** for new or modified behavior; for bug fixes, add or adjust tests when reasonable so the fix is covered.
