@@ -33,9 +33,23 @@ def _element_type(el: ScreenElement) -> str:
     return "other"
 
 
+def _word_count(text: str) -> int:
+    """Count space-separated words (non-empty tokens)."""
+    return len([t for t in (text or "").split() if t])
+
+
 def _dialogue_line_count(el: DialogueBlock) -> int:
     """Number of spoken lines (DialoguePart type 'line') in a block."""
     return sum(1 for p in el.parts if getattr(p, "type", None) == "line")
+
+
+def _dialogue_word_count(el: DialogueBlock) -> int:
+    """Word count of spoken lines only (DialoguePart type 'line')."""
+    return sum(
+        _word_count(getattr(p, "text", "") or "")
+        for p in el.parts
+        if getattr(p, "type", None) == "line"
+    )
 
 
 def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
@@ -163,6 +177,53 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
             }
         )
 
+    # Word counts: dialogue (spoken lines only), action, and whole script
+    total_action_words = 0
+    total_dialogue_words = 0
+    total_transition_words = 0
+    total_shot_words = 0
+    total_general_words = 0
+    total_lyric_words = 0
+
+    def count_words(elements: list[ScreenElement]) -> None:
+        nonlocal total_action_words, total_dialogue_words
+        nonlocal total_transition_words, total_shot_words
+        nonlocal total_general_words, total_lyric_words
+        for el in elements:
+            t = _element_type(el)
+            if t == "action":
+                total_action_words += _word_count(
+                    getattr(el, "text", "") or ""
+                )
+            elif t == "dialogue_block":
+                assert isinstance(el, DialogueBlock)
+                total_dialogue_words += _dialogue_word_count(el)
+            elif t == "transition":
+                total_transition_words += _word_count(
+                    getattr(el, "text", "") or ""
+                )
+            elif t == "shot":
+                total_shot_words += _word_count(getattr(el, "text", "") or "")
+            elif t == "general":
+                total_general_words += _word_count(
+                    getattr(el, "text", "") or ""
+                )
+            elif t == "lyric":
+                total_lyric_words += _word_count(getattr(el, "text", "") or "")
+
+    count_words(screenplay.preamble)
+    for scene in screenplay.scenes:
+        count_words(scene.elements)
+
+    total_words = (
+        total_action_words
+        + total_dialogue_words
+        + total_transition_words
+        + total_shot_words
+        + total_general_words
+        + total_lyric_words
+    )
+
     return {
         "scenes_count": len(screenplay.scenes),
         "elements": elements_by_type,
@@ -179,4 +240,7 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
             + elements_by_type["general"]
             + elements_by_type["lyric"]
         ),
+        "total_action_words": total_action_words,
+        "total_dialogue_words": total_dialogue_words,
+        "total_words": total_words,
     }

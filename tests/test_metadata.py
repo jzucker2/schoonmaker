@@ -44,6 +44,9 @@ def test_metadata_with_flag_includes_metadata(sample_fdx_path, tmp_path):
     assert "total_dialogue_block_count" in meta
     assert "total_dialogue_line_count" in meta
     assert "total_lines_count" in meta
+    assert "total_action_words" in meta
+    assert "total_dialogue_words" in meta
+    assert "total_words" in meta
     assert meta["scenes_count"] == len(data["scenes"])
 
 
@@ -90,6 +93,26 @@ def test_metadata_compute_screenplay(sample_fdx_path):
     assert scene1["dialogue_line_count"] == 0
     assert scene1["action_count"] == 0
     assert scene1["lines_count"] == 1
+    # Word counts: action "John slams the door."=4, dialogue "Hello?"=1,
+    # transition "CUT TO:"=2, general ""=0 → total 7
+    assert meta["total_action_words"] == 4
+    assert meta["total_dialogue_words"] == 1
+    assert meta["total_words"] == 7
+
+
+def test_metadata_word_counts_accuracy(sample_fdx_path):
+    """Word counts: dialogue (spoken only), action, and total are correct."""
+    screenplay = FDXParser().parse(str(sample_fdx_path))
+    meta = compute_screenplay_metadata(screenplay)
+    # sample.fdx has one action ("John slams the door."), one dialogue line
+    # ("Hello?"), one transition ("CUT TO:"), one general (empty)
+    assert meta["total_action_words"] == 4
+    assert meta["total_dialogue_words"] == 1
+    assert meta["total_words"] == 7
+    assert (
+        meta["total_words"]
+        >= meta["total_action_words"] + meta["total_dialogue_words"]
+    )
 
 
 def test_metadata_aggregates_match_per_scene_and_elements(sample_fdx_path):
