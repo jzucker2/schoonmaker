@@ -115,4 +115,12 @@ class Screenplay:
     title_page: list[TitlePageField] = field(default_factory=list)
     scenes: list[Scene] = field(default_factory=list)
     preamble: list[ScreenElement] = field(default_factory=list)
+    # Not yet parsed; see notes/FDX_TODO.md
+    revisions: list[dict[str, Any]] = field(default_factory=list)
+    smart_type: dict[str, Any] = field(default_factory=dict)
+    characters: list[dict[str, Any]] = field(default_factory=list)
+    script_notes: list[dict[str, Any]] = field(default_factory=list)
+    document_ref: list[dict[str, Any]] = field(default_factory=list)
+    alt_collection: list[dict[str, Any]] = field(default_factory=list)
+    target_script_length: Optional[str] = None
     meta: dict[str, Any] = field(default_factory=dict)

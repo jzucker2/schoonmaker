@@ -1,5 +1,7 @@
 """Tests for schoonmaker.fdx parser and Fountain export."""
 
+from pathlib import Path
+
 from schoonmaker.fdx import FDXParser, screenplay_to_fountain
 
 
@@ -18,6 +20,19 @@ def test_split_character_and_modifiers_single_modifier():
     name, modifiers = parser._split_character_and_modifiers("JANE (O.S.)")
     assert name == "JANE"
     assert modifiers == ["O.S."]
+
+
+def test_parse_title_page():
+    """Title page (FinalDraft/TitlePage/Content) is parsed into title_page."""
+    path = Path(__file__).parent / "fixtures" / "sample_with_title_page.fdx"
+    screenplay = FDXParser().parse(str(path))
+    assert len(screenplay.title_page) >= 3
+    texts = [f.text for f in screenplay.title_page]
+    assert "My Script Title" in texts
+    assert "Written by" in texts
+    assert "Jane Doe" in texts
+    assert len(screenplay.scenes) == 1
+    assert screenplay.scenes[0].heading.raw == "INT. ROOM - DAY"
 
 
 def test_parse_basic_structure(sample_fdx_path):
@@ -62,3 +77,12 @@ def test_convert_to_fountain(sample_fdx_path):
     assert "Hello?" in fountain
     assert "> CUT TO:" in fountain
     assert "EXT. STREET - LATER #2#" in fountain
+
+
+def test_parse_fdx13_sample(sample_fdx13_path):
+    """Parse FDX 13 sample (samples/final_draft_13_sample.fdx)."""
+    screenplay = FDXParser().parse(str(sample_fdx13_path))
+    assert screenplay.document_type == "Script"
+    assert screenplay.version == "6"
+    assert len(screenplay.document_ref) >= 1
+    assert len(screenplay.scenes) >= 1

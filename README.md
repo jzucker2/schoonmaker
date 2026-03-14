@@ -27,7 +27,7 @@ make check
 
 ## CLI usage
 
-Default input file is `samples/final_draft_12_sample.fdx` unless `-f` is given.
+Run with **`python cli.py`** followed by a subcommand and options. Default input is `samples/final_draft_12_sample.fdx` unless `-f` is given.
 
 ```bash
 # Parse FDX and print summary (document_type, version, scene count)

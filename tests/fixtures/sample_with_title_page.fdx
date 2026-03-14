@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<FinalDraft DocumentType="Script" Template="No" Version="3">
+  <TitlePage>
+    <Content>
+      <Paragraph>
+        <Text>My Script Title</Text>
+      </Paragraph>
+      <Paragraph>
+        <Text>Written by</Text>
+      </Paragraph>
+      <Paragraph>
+        <Text>Jane Doe</Text>
+      </Paragraph>
+    </Content>
+  </TitlePage>
+  <Content>
+    <Paragraph Type="Scene Heading" Number="1">
+      <Text>INT. ROOM - DAY</Text>
+    </Paragraph>
+    <Paragraph Type="Action">
+      <Text>Action here.</Text>
+    </Paragraph>
+  </Content>
+</FinalDraft>
