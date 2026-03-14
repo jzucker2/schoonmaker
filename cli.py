@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import sys
@@ -57,16 +58,52 @@ def _normalize_for_checksum(key: str, val: object) -> object:
     return out_list
 
 
+def _id_to_index_from_scenes(scenes: list) -> dict[str, int]:
+    """Build scene id -> index from top-level scenes (metadata norm)."""
+    if not isinstance(scenes, list):
+        return {}
+    return {
+        s["id"]: i
+        for i, s in enumerate(scenes)
+        if isinstance(s, dict) and "id" in s
+    }
+
+
+def _normalize_metadata_for_checksum(
+    metadata: dict, id_to_index: dict[str, int]
+) -> dict:
+    """Normalize metadata: scene_id/scene_ids -> indices for stable hash."""
+    out = copy.deepcopy(metadata)
+    if "scenes" in out and isinstance(out["scenes"], list):
+        for i, item in enumerate(out["scenes"]):
+            if isinstance(item, dict) and "scene_id" in item:
+                sid = item.pop("scene_id")
+                item["_index"] = id_to_index.get(sid, i)
+    if "characters" in out and isinstance(out["characters"], dict):
+        for char_data in out["characters"].values():
+            if isinstance(char_data, dict) and "scene_ids" in char_data:
+                ids = char_data["scene_ids"]
+                char_data["scene_indices"] = sorted(
+                    id_to_index.get(sid, -1) for sid in ids
+                )
+                del char_data["scene_ids"]
+    return out
+
+
 def _compute_output_checksums(out: dict) -> dict[str, str]:
     """SHA-256 hex digest of canonical JSON for key sections (for diffing)."""
     sections = ["alt_collection", "scenes", "title_page", "preamble"]
     if "metadata" in out:
         sections.append("metadata")
+    id_to_index = _id_to_index_from_scenes(out.get("scenes"))
     result = {}
     for key in sections:
         val = out.get(key)
         if val is not None:
-            normalized = _normalize_for_checksum(key, val)
+            if key == "metadata":
+                normalized = _normalize_metadata_for_checksum(val, id_to_index)
+            else:
+                normalized = _normalize_for_checksum(key, val)
             canonical = json.dumps(
                 normalized, sort_keys=True, ensure_ascii=False
             )
