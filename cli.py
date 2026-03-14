@@ -42,6 +42,18 @@ def run_summary(args) -> int:
     return 0
 
 
+def _strip_run_varying_ids(val: object) -> object:
+    """Recursively remove id and dual_group from dicts for stable checksums."""
+    if isinstance(val, dict):
+        out = dict(val)
+        out.pop("id", None)
+        out.pop("dual_group", None)
+        return {k: _strip_run_varying_ids(v) for k, v in out.items()}
+    if isinstance(val, list):
+        return [_strip_run_varying_ids(item) for item in val]
+    return val
+
+
 def _normalize_for_checksum(key: str, val: object) -> object:
     """Strip run-varying ids so checksums are deterministic."""
     if key != "scenes" or not isinstance(val, list):
@@ -104,6 +116,7 @@ def _compute_output_checksums(out: dict) -> dict[str, str]:
                 normalized = _normalize_metadata_for_checksum(val, id_to_index)
             else:
                 normalized = _normalize_for_checksum(key, val)
+                normalized = _strip_run_varying_ids(normalized)
             canonical = json.dumps(
                 normalized, sort_keys=True, ensure_ascii=False
             )

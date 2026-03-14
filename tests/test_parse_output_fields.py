@@ -191,6 +191,36 @@ def test_parse_metadata_checksum_deterministic(sample_fdx_path, tmp_path):
     assert d1["checksums"]["metadata"] == d2["checksums"]["metadata"]
 
 
+def test_parse_checksums_deterministic_with_dual_dialogue(
+    sample_fdx13_path, tmp_path
+):
+    """With dual dialogue, scenes and preamble checksums are deterministic."""
+    from cli import run_parse
+
+    out1 = tmp_path / "out1.json"
+    out2 = tmp_path / "out2.json"
+
+    def make_args(output_path):
+        return type(
+            "Args",
+            (),
+            {
+                "command": "parse",
+                "file": str(sample_fdx13_path),
+                "output": str(output_path),
+                "metadata": False,
+                "checksum": True,
+            },
+        )()
+
+    run_parse(make_args(out1))
+    run_parse(make_args(out2))
+    d1 = json.loads(out1.read_text(encoding="utf-8"))
+    d2 = json.loads(out2.read_text(encoding="utf-8"))
+    assert d1["checksums"]["scenes"] == d2["checksums"]["scenes"]
+    assert d1["checksums"]["preamble"] == d2["checksums"]["preamble"]
+
+
 def test_parse_checksums_deterministic(sample_fdx_path, tmp_path):
     """Same file parsed twice with --checksum yields same checksums."""
     from cli import run_parse
