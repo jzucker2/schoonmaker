@@ -224,6 +224,15 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
         + total_lyric_words
     )
 
+    total_paragraphs = (
+        elements_by_type["action"]
+        + elements_by_type["dialogue_block"]
+        + elements_by_type["transition"]
+        + elements_by_type["shot"]
+        + elements_by_type["general"]
+        + elements_by_type["lyric"]
+    )
+
     return {
         "scenes_count": len(screenplay.scenes),
         "elements": elements_by_type,
@@ -232,14 +241,8 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
         "total_action_count": elements_by_type["action"],
         "total_dialogue_block_count": elements_by_type["dialogue_block"],
         "total_dialogue_line_count": elements_by_type["dialogue_line"],
-        "total_lines_count": (
-            elements_by_type["action"]
-            + elements_by_type["dialogue_block"]
-            + elements_by_type["transition"]
-            + elements_by_type["shot"]
-            + elements_by_type["general"]
-            + elements_by_type["lyric"]
-        ),
+        "total_paragraphs_count": total_paragraphs,
+        "total_lines_count": total_paragraphs,
         "total_action_words": total_action_words,
         "total_dialogue_words": total_dialogue_words,
         "total_words": total_words,

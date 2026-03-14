@@ -47,6 +47,7 @@ def test_metadata_with_flag_includes_metadata(sample_fdx_path, tmp_path):
     assert "total_action_words" in meta
     assert "total_dialogue_words" in meta
     assert "total_words" in meta
+    assert "total_paragraphs_count" in meta
     assert meta["scenes_count"] == len(data["scenes"])
 
 
@@ -69,6 +70,7 @@ def test_metadata_compute_screenplay(sample_fdx_path):
     assert (
         meta["total_lines_count"] == 4
     )  # action + dialogue_block + transition + general
+    assert meta["total_paragraphs_count"] == 4
     assert len(meta["scenes"]) == 2
     # Character JOHN (parser strips "(V.O.)" to modifiers)
     chars = meta["characters"]
@@ -139,6 +141,7 @@ def test_metadata_aggregates_match_per_scene_and_elements(sample_fdx_path):
         + meta["elements"]["lyric"]
     )
     assert meta["total_lines_count"] == expected_total_lines
+    assert meta["total_paragraphs_count"] == meta["total_lines_count"]
     # Each character's scenes_count should equal len(scene_ids)
     for name, data in meta["characters"].items():
         assert data["scenes_count"] == len(data["scene_ids"])
