@@ -12,7 +12,7 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
   - **`cli_arg_parser.py`** – CLI argument parsing (file path, subcommands).
   - **`metadata.py`** – `compute_screenplay_metadata(screenplay)` for scene/character/line stats (used when `parse --metadata`).
   - **`utils.py`** – Logging helpers.
-- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain` (see Commands).
+- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain` (see Commands). Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `--checksum`, adds a `checksums` object (SHA-256 per section).
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
@@ -46,6 +46,9 @@ python cli.py parse -f path/to/script.fdx -o script.json
 
 # Include computed metadata (scene/character/line counts) in the JSON
 python cli.py parse -f path/to/script.fdx -o script.json --metadata
+
+# Add SHA-256 checksums for sections to JSON (for easier diffing)
+python cli.py parse -f path/to/script.fdx -o script.json --checksum
 
 # Emit FDX → Fountain to stdout
 python cli.py fountain -f path/to/script.fdx

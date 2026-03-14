@@ -43,6 +43,9 @@ python cli.py parse -f path/to/script.fdx -o script.json
 # Include computed metadata (scene/character/line counts) in the JSON
 python cli.py parse -f path/to/script.fdx -o script.json --metadata
 
+# Add SHA-256 checksums for sections (alts, scenes, etc.) to JSON (for easier diffing)
+python cli.py parse -f path/to/script.fdx -o script.json --checksum
+
 # Emit FDX → Fountain to stdout
 python cli.py fountain -f path/to/script.fdx
 
@@ -59,5 +62,7 @@ docker compose build && docker compose run --rm schoonmaker
 # Or with your own file (mount a dir and pass -f):
 # docker compose run --rm -v "$(pwd)/my-scripts:/data:ro" schoonmaker python cli.py parse -f /data/script.fdx -o /data/out.json
 ```
+
+Parse JSON output always includes **`nonce`** (unique per run), **`parser_version`** (from `schoonmaker.version`), and **`parse_datetime`** (UTC ISO). With **`--checksum`**, a **`checksums`** object is added with SHA-256 hashes for `alt_collection`, `scenes`, `title_page`, and `preamble` so you can quickly spot content changes.
 
 See **AGENTS.md** for layout, conventions, and full command reference.

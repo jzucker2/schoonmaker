@@ -43,6 +43,11 @@ class CLIArgParser(object):
             action="store_true",
             help="Add computed metadata (scene/character/line counts) to JSON",
         )
+        parse_parser.add_argument(
+            "--checksum",
+            action="store_true",
+            help="Add SHA-256 checksums for sections to JSON output",
+        )
         parse_parser.set_defaults(command="parse")
 
         fountain_parser = subparsers.add_parser(
