@@ -74,7 +74,7 @@ def test_parse_output_has_parse_datetime(sample_fdx_path, tmp_path):
     data = json.loads(out.read_text(encoding="utf-8"))
     assert "parse_datetime" in data
     dt = data["parse_datetime"]
-    assert "T" in dt and "Z" in dt or "+" in dt, "expect ISO with timezone"
+    assert "T" in dt and ("Z" in dt or "+" in dt), "expect ISO with timezone"
 
 
 def test_parse_output_nonce_differs_each_run(sample_fdx_path, tmp_path):
