@@ -11,6 +11,7 @@ The parser reads:
 - **ScriptNotes** – note entries (Name, Range, Type, WriterName, text) → `screenplay.script_notes`
 - **DocumentRef** – ref entries (e.g. DateTime, id; optional in FDX 13+) → `screenplay.document_ref`
 - **AltCollection** – alternate dialogue/lines (Alt with Id + Paragraph/Text) → `screenplay.alt_collection`
+- **In-paragraph Alts** – `<Alts Current="..."><AltId>...</AltId></Alts>` inside a Paragraph → `ParagraphInfo.alts` (in JSON: `source_paragraph.alts` with `Current`, `AltIds`), so alternates can be tied to script positions
 - **TargetScriptLength** – target length text (e.g. page count) → `screenplay.target_script_length`
 
 The following FDX tags are **not** yet parsed.

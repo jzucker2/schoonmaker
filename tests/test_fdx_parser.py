@@ -86,3 +86,29 @@ def test_parse_fdx13_sample(sample_fdx13_path):
     assert screenplay.version == "6"
     assert len(screenplay.document_ref) >= 1
     assert len(screenplay.scenes) >= 1
+
+
+def test_parse_paragraph_alts_preserved(sample_fdx12_path):
+    """In-paragraph Alts/AltId preserved in source_paragraph.alts."""
+    screenplay = FDXParser().parse(str(sample_fdx12_path))
+
+    def has_alts(el):
+        meta = getattr(el, "meta", {})
+        for key in ("source_paragraph", "source_paragraphs"):
+            p = meta.get(key)
+            if p is None:
+                continue
+            if isinstance(p, list):
+                for item in p:
+                    if item.get("alts") and item["alts"].get("AltIds"):
+                        return True
+            elif p.get("alts") and p["alts"].get("AltIds"):
+                return True
+        return False
+
+    elements = screenplay.preamble + [
+        e for s in screenplay.scenes for e in s.elements
+    ]
+    assert any(
+        has_alts(el) for el in elements
+    ), "expected at least one element with source_paragraph.alts"

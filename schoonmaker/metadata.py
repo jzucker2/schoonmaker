@@ -77,7 +77,6 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
 
     def process_elements(
         elements: list[ScreenElement],
-        scene_id: str | None,
         scene_characters: set[str],
         scene_action: int,
         scene_dialogue_block: int,
@@ -111,10 +110,9 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
                 pass
         return scene_action, scene_dialogue_block, scene_dialogue_line
 
-    # Preamble (counts go into elements_by_type and by_character; no scene_id)
+    # Preamble (counts go into elements_by_type and by_character)
     process_elements(
         screenplay.preamble,
-        None,
         set(),
         0,
         0,
@@ -122,14 +120,13 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
     )
 
     for scene in screenplay.scenes:
-        scene_characters: set[str] = set()
+        scene_characters = set()
         scene_action = 0
         scene_dialogue_block = 0
         scene_dialogue_line = 0
         scene_action, scene_dialogue_block, scene_dialogue_line = (
             process_elements(
                 scene.elements,
-                scene.id,
                 scene_characters,
                 scene_action,
                 scene_dialogue_block,
@@ -242,7 +239,6 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
         "total_dialogue_block_count": elements_by_type["dialogue_block"],
         "total_dialogue_line_count": elements_by_type["dialogue_line"],
         "total_paragraphs_count": total_paragraphs,
-        "total_lines_count": total_paragraphs,
         "total_action_words": total_action_words,
         "total_dialogue_words": total_dialogue_words,
         "total_words": total_words,

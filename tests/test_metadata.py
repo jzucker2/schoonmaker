@@ -43,7 +43,7 @@ def test_metadata_with_flag_includes_metadata(sample_fdx_path, tmp_path):
     assert "total_action_count" in meta
     assert "total_dialogue_block_count" in meta
     assert "total_dialogue_line_count" in meta
-    assert "total_lines_count" in meta
+    assert "total_paragraphs_count" in meta
     assert "total_action_words" in meta
     assert "total_dialogue_words" in meta
     assert "total_words" in meta
@@ -68,9 +68,8 @@ def test_metadata_compute_screenplay(sample_fdx_path):
     assert meta["total_dialogue_block_count"] == 1
     assert meta["total_dialogue_line_count"] == 1
     assert (
-        meta["total_lines_count"] == 4
+        meta["total_paragraphs_count"] == 4
     )  # action + dialogue_block + transition + general
-    assert meta["total_paragraphs_count"] == 4
     assert len(meta["scenes"]) == 2
     # Character JOHN (parser strips "(V.O.)" to modifiers)
     chars = meta["characters"]
@@ -118,7 +117,7 @@ def test_metadata_word_counts_accuracy(sample_fdx_path):
 
 
 def test_metadata_aggregates_match_per_scene_and_elements(sample_fdx_path):
-    """Totals match sum of per-scene counts; total_lines matches elements."""
+    """Totals match sum of per-scene; total_paragraphs matches element sum."""
     screenplay = FDXParser().parse(str(sample_fdx_path))
     meta = compute_screenplay_metadata(screenplay)
     # total_* should match sum over scenes
@@ -131,8 +130,8 @@ def test_metadata_aggregates_match_per_scene_and_elements(sample_fdx_path):
     assert meta["total_dialogue_line_count"] == sum(
         s["dialogue_line_count"] for s in meta["scenes"]
     )
-    # total_lines_count = sum of element-type counts (excl. dialogue_line)
-    expected_total_lines = (
+    # total_paragraphs_count = sum of element-type counts (paragraph elements)
+    expected_paragraphs = (
         meta["elements"]["action"]
         + meta["elements"]["dialogue_block"]
         + meta["elements"]["transition"]
@@ -140,8 +139,7 @@ def test_metadata_aggregates_match_per_scene_and_elements(sample_fdx_path):
         + meta["elements"]["general"]
         + meta["elements"]["lyric"]
     )
-    assert meta["total_lines_count"] == expected_total_lines
-    assert meta["total_paragraphs_count"] == meta["total_lines_count"]
+    assert meta["total_paragraphs_count"] == expected_paragraphs
     # Each character's scenes_count should equal len(scene_ids)
     for name, data in meta["characters"].items():
         assert data["scenes_count"] == len(data["scene_ids"])

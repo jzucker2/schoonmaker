@@ -454,6 +454,7 @@ class FDXParser:
         text_parts: list[str] = []
         scene_properties: dict[str, Any] = {}
         script_notes: list[str] = []
+        alts: Optional[dict[str, Any]] = None
 
         for child in elem:
             ctag = self._local_name(child.tag)
@@ -480,6 +481,17 @@ class FDXParser:
                 )
                 if note_text.strip():
                     script_notes.append(note_text.strip())
+            elif ctag == "Alts":
+                alt_ids = [
+                    (c.text or "").strip()
+                    for c in child
+                    if self._local_name(c.tag) == "AltId"
+                    and (c.text or "").strip()
+                ]
+                alts = {
+                    "Current": child.attrib.get("Current"),
+                    "AltIds": alt_ids,
+                }
 
         return ParagraphInfo(
             type=attrs.get("Type", "Unknown"),
@@ -488,6 +500,7 @@ class FDXParser:
             attrs=attrs,
             scene_properties=scene_properties,
             script_notes=script_notes,
+            alts=alts,
         )
 
     def _split_character_and_modifiers(
