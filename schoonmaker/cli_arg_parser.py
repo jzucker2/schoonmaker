@@ -38,6 +38,11 @@ class CLIArgParser(object):
         parse_parser.add_argument(
             "-o", "--output", type=str, help="Path to output JSON file"
         )
+        parse_parser.add_argument(
+            "--metadata",
+            action="store_true",
+            help="Add computed metadata (scene/character/line counts) to JSON",
+        )
         parse_parser.set_defaults(command="parse")
 
         fountain_parser = subparsers.add_parser(

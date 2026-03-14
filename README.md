@@ -20,8 +20,9 @@ venv/bin/pip install -r requirements-dev.txt
 # Run tests (pytest; fixtures in tests/fixtures/)
 make test
 
-# Format and lint
+# Format and lint (run both: format then lint; see AGENTS.md if lint fails after format)
 make format
+make lint
 make check
 ```
 
@@ -38,6 +39,9 @@ python cli.py parse -f path/to/script.fdx
 
 # Write JSON AST to a file
 python cli.py parse -f path/to/script.fdx -o script.json
+
+# Include computed metadata (scene/character/line counts) in the JSON
+python cli.py parse -f path/to/script.fdx -o script.json --metadata
 
 # Emit FDX → Fountain to stdout
 python cli.py fountain -f path/to/script.fdx

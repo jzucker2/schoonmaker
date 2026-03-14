@@ -9,6 +9,7 @@ from dataclasses import asdict
 
 from schoonmaker.cli_arg_parser import CLIArgParser
 from schoonmaker.fdx import FDXParser, screenplay_to_fountain
+from schoonmaker.metadata import compute_screenplay_metadata
 from schoonmaker.utils import set_up_logging, get_logger
 
 set_up_logging()
@@ -38,7 +39,10 @@ def run_summary(args) -> int:
 
 def run_parse(args) -> int:
     screenplay = FDXParser().parse(args.file)
-    payload = json.dumps(asdict(screenplay), indent=2, ensure_ascii=False)
+    out = asdict(screenplay)
+    if getattr(args, "metadata", False):
+        out["metadata"] = compute_screenplay_metadata(screenplay)
+    payload = json.dumps(out, indent=2, ensure_ascii=False)
     return _write_output(payload + "\n", getattr(args, "output", None))
 
 
