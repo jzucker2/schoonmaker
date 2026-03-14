@@ -46,6 +46,21 @@ def test_metadata_with_flag_includes_metadata(sample_fdx_path, tmp_path):
     assert "total_paragraphs_count" in meta
     assert "total_action_words" in meta
     assert "total_dialogue_words" in meta
+    assert "total_scene_heading_count" in meta
+    assert "total_scene_heading_words" in meta
+    assert "total_locations_count" in meta
+    assert "locations" in meta
+    assert "indoor_locations_count" in meta
+    assert "outdoor_locations_count" in meta
+    assert "indoor_locations" in meta
+    assert "outdoor_locations" in meta
+    assert "indoor_scenes_count" in meta
+    assert "outdoor_scenes_count" in meta
+    assert "other_locations_count" in meta
+    assert "other_locations" in meta
+    assert "other_scenes_count" in meta
+    assert "total_parenthetical_count" in meta
+    assert "total_parenthetical_words" in meta
     assert "total_words" in meta
     assert "total_paragraphs_count" in meta
     assert meta["scenes_count"] == len(data["scenes"])
@@ -94,25 +109,47 @@ def test_metadata_compute_screenplay(sample_fdx_path):
     assert scene1["dialogue_line_count"] == 0
     assert scene1["action_count"] == 0
     assert scene1["lines_count"] == 1
-    # Word counts: action "John slams the door."=4, dialogue "Hello?"=1,
-    # transition "CUT TO:"=2, general ""=0 → total 7
+    # Scene headings: 2 headings, 8 words total (e.g. INT. APARTMENT - NIGHT)
+    assert meta["total_scene_heading_count"] == 2
+    assert meta["total_scene_heading_words"] == 8
+    # Locations: 2 unique; INT. = indoor, EXT. = outdoor
+    assert meta["total_locations_count"] == 2
+    locs = {r["location"]: r["count"] for r in meta["locations"]}
+    assert locs["INT. APARTMENT"] == 1
+    assert locs["EXT. STREET"] == 1
+    assert meta["indoor_locations_count"] == 1
+    assert meta["outdoor_locations_count"] == 1
+    assert meta["indoor_scenes_count"] == 1
+    assert meta["outdoor_scenes_count"] == 1
+    assert len(meta["indoor_locations"]) == 1
+    assert meta["indoor_locations"][0]["location"] == "INT. APARTMENT"
+    assert len(meta["outdoor_locations"]) == 1
+    assert meta["outdoor_locations"][0]["location"] == "EXT. STREET"
+    # Parenthetical: one "(whispering)" = 1 count, 1 word
+    assert meta["total_parenthetical_count"] == 1
+    assert meta["total_parenthetical_words"] == 1
+    # Word counts: action 4, dialogue 1, parenthetical 1, scene heading 8,
+    # transition 2, general 0 → total 16
     assert meta["total_action_words"] == 4
     assert meta["total_dialogue_words"] == 1
-    assert meta["total_words"] == 7
+    assert meta["total_words"] == 16
 
 
 def test_metadata_word_counts_accuracy(sample_fdx_path):
-    """Word counts: dialogue (spoken only), action, and total are correct."""
+    """Word counts: dialogue, action, parenthetical, scene heading, total."""
     screenplay = FDXParser().parse(str(sample_fdx_path))
     meta = compute_screenplay_metadata(screenplay)
-    # sample.fdx has one action ("John slams the door."), one dialogue line
-    # ("Hello?"), one transition ("CUT TO:"), one general (empty)
     assert meta["total_action_words"] == 4
     assert meta["total_dialogue_words"] == 1
-    assert meta["total_words"] == 7
+    assert meta["total_parenthetical_words"] == 1
+    assert meta["total_scene_heading_words"] == 8
+    assert meta["total_words"] == 16
     assert (
         meta["total_words"]
-        >= meta["total_action_words"] + meta["total_dialogue_words"]
+        >= meta["total_action_words"]
+        + meta["total_dialogue_words"]
+        + meta["total_parenthetical_words"]
+        + meta["total_scene_heading_words"]
     )
 
 
@@ -140,6 +177,15 @@ def test_metadata_aggregates_match_per_scene_and_elements(sample_fdx_path):
         + meta["elements"]["lyric"]
     )
     assert meta["total_paragraphs_count"] == expected_paragraphs
+    # Location counts sum to scene count (each heading counts once)
+    assert sum(c["count"] for c in meta["locations"]) == meta["scenes_count"]
+    # Indoor + outdoor + other scenes = total scenes
+    assert (
+        meta["indoor_scenes_count"]
+        + meta["outdoor_scenes_count"]
+        + meta["other_scenes_count"]
+        == meta["scenes_count"]
+    )
     # Each character's scenes_count should equal len(scene_ids)
     for name, data in meta["characters"].items():
         assert data["scenes_count"] == len(data["scene_ids"])

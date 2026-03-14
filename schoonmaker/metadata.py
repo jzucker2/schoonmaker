@@ -38,6 +38,24 @@ def _word_count(text: str) -> int:
     return len([t for t in (text or "").split() if t])
 
 
+def _heading_to_location(raw: str) -> str:
+    """Normalize heading to location (strip after last ' - ')."""
+    raw = (raw or "").strip()
+    if " - " in raw:
+        return raw.rsplit(" - ", 1)[0].strip() or raw
+    return raw
+
+
+def _location_int_ext(loc: str) -> str:
+    """Classify as indoor/outdoor/other by INT./EXT. prefix."""
+    u = (loc or "").strip().upper()
+    if u.startswith("INT.") or u.startswith("INT "):
+        return "indoor"
+    if u.startswith("EXT.") or u.startswith("EXT "):
+        return "outdoor"
+    return "other"
+
+
 def _dialogue_line_count(el: DialogueBlock) -> int:
     """Number of spoken lines (DialoguePart type 'line') in a block."""
     return sum(1 for p in el.parts if getattr(p, "type", None) == "line")
@@ -49,6 +67,22 @@ def _dialogue_word_count(el: DialogueBlock) -> int:
         _word_count(getattr(p, "text", "") or "")
         for p in el.parts
         if getattr(p, "type", None) == "line"
+    )
+
+
+def _parenthetical_count(el: DialogueBlock) -> int:
+    """Number of parenthetical parts in a block."""
+    return sum(
+        1 for p in el.parts if getattr(p, "type", None) == "parenthetical"
+    )
+
+
+def _parenthetical_word_count(el: DialogueBlock) -> int:
+    """Word count of parenthetical parts only."""
+    return sum(
+        _word_count(getattr(p, "text", "") or "")
+        for p in el.parts
+        if getattr(p, "type", None) == "parenthetical"
     )
 
 
@@ -212,9 +246,66 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
     for scene in screenplay.scenes:
         count_words(scene.elements)
 
+    total_scene_heading_count = len(screenplay.scenes)
+    total_scene_heading_words = sum(
+        _word_count(s.heading.raw or "") for s in screenplay.scenes
+    )
+
+    location_counts: dict[str, int] = {}
+    indoor_counts: dict[str, int] = {}
+    outdoor_counts: dict[str, int] = {}
+    other_location_counts: dict[str, int] = {}
+    indoor_scenes_count = 0
+    outdoor_scenes_count = 0
+    other_scenes_count = 0
+    for scene in screenplay.scenes:
+        loc = _heading_to_location(scene.heading.raw or "")
+        if loc:
+            location_counts[loc] = location_counts.get(loc, 0) + 1
+            kind = _location_int_ext(loc)
+            if kind == "indoor":
+                indoor_counts[loc] = indoor_counts.get(loc, 0) + 1
+                indoor_scenes_count += 1
+            elif kind == "outdoor":
+                outdoor_counts[loc] = outdoor_counts.get(loc, 0) + 1
+                outdoor_scenes_count += 1
+            else:
+                n = other_location_counts.get(loc, 0) + 1
+                other_location_counts[loc] = n
+                other_scenes_count += 1
+    total_locations_count = len(location_counts)
+    locations = [
+        {"location": loc, "count": count}
+        for loc, count in sorted(location_counts.items())
+    ]
+    indoor_locations = [
+        {"location": loc, "count": count}
+        for loc, count in sorted(indoor_counts.items())
+    ]
+    outdoor_locations = [
+        {"location": loc, "count": count}
+        for loc, count in sorted(outdoor_counts.items())
+    ]
+    other_locations = [
+        {"location": loc, "count": count}
+        for loc, count in sorted(other_location_counts.items())
+    ]
+
+    total_parenthetical_count = 0
+    total_parenthetical_words = 0
+    for el in screenplay.preamble + [
+        e for s in screenplay.scenes for e in s.elements
+    ]:
+        if _element_type(el) == "dialogue_block":
+            assert isinstance(el, DialogueBlock)
+            total_parenthetical_count += _parenthetical_count(el)
+            total_parenthetical_words += _parenthetical_word_count(el)
+
     total_words = (
         total_action_words
         + total_dialogue_words
+        + total_parenthetical_words
+        + total_scene_heading_words
         + total_transition_words
         + total_shot_words
         + total_general_words
@@ -241,5 +332,20 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
         "total_paragraphs_count": total_paragraphs,
         "total_action_words": total_action_words,
         "total_dialogue_words": total_dialogue_words,
+        "total_scene_heading_count": total_scene_heading_count,
+        "total_scene_heading_words": total_scene_heading_words,
+        "total_locations_count": total_locations_count,
+        "locations": locations,
+        "indoor_locations_count": len(indoor_counts),
+        "outdoor_locations_count": len(outdoor_counts),
+        "indoor_locations": indoor_locations,
+        "outdoor_locations": outdoor_locations,
+        "indoor_scenes_count": indoor_scenes_count,
+        "outdoor_scenes_count": outdoor_scenes_count,
+        "other_locations_count": len(other_location_counts),
+        "other_locations": other_locations,
+        "other_scenes_count": other_scenes_count,
+        "total_parenthetical_count": total_parenthetical_count,
+        "total_parenthetical_words": total_parenthetical_words,
         "total_words": total_words,
     }
