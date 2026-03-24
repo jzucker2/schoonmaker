@@ -14,6 +14,11 @@ from dataclasses import asdict
 from schoonmaker.cli_arg_parser import CLIArgParser
 from schoonmaker.fdx import FDXParser, screenplay_to_fountain
 from schoonmaker.metadata import compute_screenplay_metadata
+from schoonmaker.parse_json_diff import (
+    build_diff_report,
+    diff_report_to_json,
+    load_parse_json,
+)
 from schoonmaker.source_file_info import source_file_info
 from schoonmaker.utils import set_up_logging, get_logger
 from schoonmaker.version import version as parser_version
@@ -162,6 +167,20 @@ def run_fountain(args) -> int:
     return _write_output(payload, getattr(args, "output", None))
 
 
+def run_diff(args) -> int:
+    """Compare two parse JSON files; emit structured diff report JSON."""
+    doc_a = load_parse_json(args.before)
+    doc_b = load_parse_json(args.after)
+    report = build_diff_report(
+        doc_a,
+        doc_b,
+        label_a="before",
+        label_b="after",
+    )
+    payload = diff_report_to_json(report)
+    return _write_output(payload, getattr(args, "output", None))
+
+
 def main() -> int:
     args = CLIArgParser.get_cli_args()
     log.info("cli_args: %s", args)
@@ -172,6 +191,8 @@ def main() -> int:
         return run_parse(args)
     if args.command == "fountain":
         return run_fountain(args)
+    if args.command == "diff":
+        return run_diff(args)
 
     log.error("Unknown command: %s", args.command)
     return 2
