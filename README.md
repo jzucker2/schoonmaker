@@ -49,6 +49,10 @@ python cli.py parse -f path/to/script.fdx -o script.json --checksum
 # Include source file path, size, and filesystem timestamps in the JSON
 python cli.py parse -f path/to/script.fdx -o script.json --file-info
 
+# All optional parse flags together (metadata, checksums, source file stats)
+python cli.py parse -f path/to/script.fdx -o script.json \
+  --metadata --checksum --file-info
+
 # Emit FDX → Fountain to stdout
 python cli.py fountain -f path/to/script.fdx
 
