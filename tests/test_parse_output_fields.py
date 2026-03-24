@@ -129,10 +129,26 @@ def test_parse_with_checksum_includes_checksums(sample_fdx_path, tmp_path):
     assert "scenes" in c
     assert "title_page" in c
     assert "preamble" in c
-    for key, val in c.items():
+    section_keys = (
+        "alt_collection",
+        "scenes",
+        "title_page",
+        "preamble",
+    )
+    for key in section_keys:
+        val = c[key]
         assert isinstance(val, str)
         assert len(val) == 64
         assert re.match(r"^[a-f0-9]+$", val), f"{key} checksum must be 64 hex"
+    assert "scene_checksums" in c
+    sc = c["scene_checksums"]
+    assert isinstance(sc, list)
+    assert len(sc) == len(data["scenes"])
+    for i, h in enumerate(sc):
+        assert isinstance(h, str) and len(h) == 64
+        assert re.match(
+            r"^[a-f0-9]+$", h
+        ), f"scene index {i} checksum must be 64 hex"
 
 
 def test_parse_with_metadata_and_checksum_includes_metadata_checksum(
@@ -219,6 +235,10 @@ def test_parse_checksums_deterministic_with_dual_dialogue(
     d2 = json.loads(out2.read_text(encoding="utf-8"))
     assert d1["checksums"]["scenes"] == d2["checksums"]["scenes"]
     assert d1["checksums"]["preamble"] == d2["checksums"]["preamble"]
+    assert (
+        d1["checksums"]["scene_checksums"]
+        == d2["checksums"]["scene_checksums"]
+    )
 
 
 def test_parse_checksums_deterministic(sample_fdx_path, tmp_path):

@@ -102,13 +102,13 @@ def _normalize_metadata_for_checksum(
     return out
 
 
-def _compute_output_checksums(out: dict) -> dict[str, str]:
+def _compute_output_checksums(out: dict) -> dict[str, object]:
     """SHA-256 hex digest of canonical JSON for key sections (for diffing)."""
     sections = ["alt_collection", "scenes", "title_page", "preamble"]
     if "metadata" in out:
         sections.append("metadata")
     id_to_index = _id_to_index_from_scenes(out.get("scenes"))
-    result = {}
+    result: dict[str, object] = {}
     for key in sections:
         val = out.get(key)
         if val is not None:
@@ -123,6 +123,17 @@ def _compute_output_checksums(out: dict) -> dict[str, str]:
             result[key] = hashlib.sha256(
                 canonical.encode("utf-8")
             ).hexdigest()
+            if key == "scenes" and isinstance(normalized, list):
+                result["scene_checksums"] = [
+                    hashlib.sha256(
+                        json.dumps(
+                            scene,
+                            sort_keys=True,
+                            ensure_ascii=False,
+                        ).encode("utf-8")
+                    ).hexdigest()
+                    for scene in normalized
+                ]
     return result
 
 

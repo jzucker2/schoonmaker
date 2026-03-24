@@ -12,7 +12,7 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
   - **`cli_arg_parser.py`** – CLI argument parsing (file path, subcommands).
   - **`metadata.py`** – `compute_screenplay_metadata(screenplay)` for scene/character/line stats (used when `parse --metadata`).
   - **`utils.py`** – Logging helpers.
-- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain` (see Commands). Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `--checksum`, adds a `checksums` object (SHA-256 per section).
+- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain` (see Commands). Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `--checksum`, adds a `checksums` object (SHA-256 per section plus `scene_checksums`, one digest per scene in order).
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
