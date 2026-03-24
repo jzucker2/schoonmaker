@@ -64,8 +64,8 @@ python cli.py fountain -f path/to/script.fdx -o script.fountain
 # Use --metadata on both parses for word counts, characters, and locations.
 python cli.py diff --before script_v1.json --after script_v2.json -o diff.json
 
-# Same with short flags (stdout if you omit -o)
-python cli.py diff -a old.json -b new.json
+# Same with short flags (-b = --before, -a = --after; stdout if you omit -o)
+python cli.py diff -b old.json -a new.json
 ```
 
 ## Docker

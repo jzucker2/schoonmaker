@@ -47,7 +47,7 @@ class TestCLIArgs(unittest.TestCase):
 
     def test_diff_before_after_short_flags(self):
         args = CLIArgParser().parser.parse_args(
-            ["diff", "-a", "old.json", "-b", "new.json", "-o", "out.json"]
+            ["diff", "-b", "old.json", "-a", "new.json", "-o", "out.json"]
         )
         self.assertEqual(args.command, "diff")
         self.assertEqual(args.before, "old.json")

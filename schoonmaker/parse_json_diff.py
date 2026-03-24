@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from schoonmaker.utils import strip_run_varying_ids
+
 
 DIFF_REPORT_VERSION = 1
 
@@ -21,24 +23,12 @@ def load_parse_json(path: str | Path) -> dict[str, Any]:
     return data
 
 
-def _strip_run_varying_ids(val: object) -> object:
-    """Match checksum pipeline: drop parser-generated UUID fields."""
-    if isinstance(val, dict):
-        out = dict(val)
-        out.pop("id", None)
-        out.pop("dual_group", None)
-        return {k: _strip_run_varying_ids(v) for k, v in out.items()}
-    if isinstance(val, list):
-        return [_strip_run_varying_ids(item) for item in val]
-    return val
-
-
 def _normalized_scene_for_digest(scene: dict, index: int) -> dict:
     """One scene dict normalized like parse scene checksum (no scene id)."""
     scene_copy = dict(scene)
     scene_copy.pop("id", None)
     scene_copy["_index"] = index
-    return _strip_run_varying_ids(scene_copy)
+    return strip_run_varying_ids(scene_copy)
 
 
 def scene_content_digest(scene: dict, index: int) -> str:
@@ -103,17 +93,21 @@ def _meta_counts(meta: dict[str, Any] | None) -> dict[str, int]:
         "other_locations_count",
     ):
         v = meta.get(key)
-        if isinstance(v, int):
-            out[key] = v
-        elif isinstance(v, bool):
+        if isinstance(v, bool):
             out[key] = int(v)
+        elif isinstance(v, int):
+            out[key] = v
         else:
             out[key] = 0
     elements = meta.get("elements")
     if isinstance(elements, dict):
         for ek, ev in elements.items():
-            if isinstance(ev, int):
+            if isinstance(ev, bool):
+                out[f"elements.{ek}"] = int(ev)
+            elif isinstance(ev, int):
                 out[f"elements.{ek}"] = ev
+            else:
+                out[f"elements.{ek}"] = 0
     return out
 
 

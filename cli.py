@@ -20,7 +20,7 @@ from schoonmaker.parse_json_diff import (
     load_parse_json,
 )
 from schoonmaker.source_file_info import source_file_info
-from schoonmaker.utils import set_up_logging, get_logger
+from schoonmaker.utils import get_logger, set_up_logging, strip_run_varying_ids
 from schoonmaker.version import version as parser_version
 
 set_up_logging()
@@ -46,18 +46,6 @@ def run_summary(args) -> int:
         n_scenes,
     )
     return 0
-
-
-def _strip_run_varying_ids(val: object) -> object:
-    """Recursively remove id and dual_group from dicts for stable checksums."""
-    if isinstance(val, dict):
-        out = dict(val)
-        out.pop("id", None)
-        out.pop("dual_group", None)
-        return {k: _strip_run_varying_ids(v) for k, v in out.items()}
-    if isinstance(val, list):
-        return [_strip_run_varying_ids(item) for item in val]
-    return val
 
 
 def _normalize_for_checksum(key: str, val: object) -> object:
@@ -122,7 +110,7 @@ def _compute_output_checksums(out: dict) -> dict[str, object]:
                 normalized = _normalize_metadata_for_checksum(val, id_to_index)
             else:
                 normalized = _normalize_for_checksum(key, val)
-                normalized = _strip_run_varying_ids(normalized)
+                normalized = strip_run_varying_ids(normalized)
             canonical = json.dumps(
                 normalized, sort_keys=True, ensure_ascii=False
             )

@@ -80,19 +80,19 @@ class CLIArgParser(object):
         )
         diff_parser.add_argument(
             "--before",
-            "-a",
-            type=str,
-            required=True,
-            metavar="PATH",
-            help="Earlier parse JSON (baseline)",
-        )
-        diff_parser.add_argument(
-            "--after",
             "-b",
             type=str,
             required=True,
             metavar="PATH",
-            help="Later parse JSON",
+            help="Earlier parse JSON baseline (-b for --before)",
+        )
+        diff_parser.add_argument(
+            "--after",
+            "-a",
+            type=str,
+            required=True,
+            metavar="PATH",
+            help="Later parse JSON (-a for --after)",
         )
         diff_parser.add_argument(
             "-o",
