@@ -14,6 +14,7 @@ from dataclasses import asdict
 from schoonmaker.cli_arg_parser import CLIArgParser
 from schoonmaker.fdx import FDXParser, screenplay_to_fountain
 from schoonmaker.metadata import compute_screenplay_metadata
+from schoonmaker.source_file_info import source_file_info
 from schoonmaker.utils import set_up_logging, get_logger
 from schoonmaker.version import version as parser_version
 
@@ -102,13 +103,13 @@ def _normalize_metadata_for_checksum(
     return out
 
 
-def _compute_output_checksums(out: dict) -> dict[str, str]:
+def _compute_output_checksums(out: dict) -> dict[str, object]:
     """SHA-256 hex digest of canonical JSON for key sections (for diffing)."""
     sections = ["alt_collection", "scenes", "title_page", "preamble"]
     if "metadata" in out:
         sections.append("metadata")
     id_to_index = _id_to_index_from_scenes(out.get("scenes"))
-    result = {}
+    result: dict[str, object] = {}
     for key in sections:
         val = out.get(key)
         if val is not None:
@@ -123,6 +124,17 @@ def _compute_output_checksums(out: dict) -> dict[str, str]:
             result[key] = hashlib.sha256(
                 canonical.encode("utf-8")
             ).hexdigest()
+            if key == "scenes" and isinstance(normalized, list):
+                result["scene_checksums"] = [
+                    hashlib.sha256(
+                        json.dumps(
+                            scene,
+                            sort_keys=True,
+                            ensure_ascii=False,
+                        ).encode("utf-8")
+                    ).hexdigest()
+                    for scene in normalized
+                ]
     return result
 
 
@@ -136,6 +148,8 @@ def run_parse(args) -> int:
     out.update(asdict(screenplay))
     if getattr(args, "metadata", False):
         out["metadata"] = compute_screenplay_metadata(screenplay)
+    if getattr(args, "file_info", False):
+        out["source_file"] = source_file_info(args.file)
     if getattr(args, "checksum", False):
         out["checksums"] = _compute_output_checksums(out)
     payload = json.dumps(out, indent=2, ensure_ascii=False)

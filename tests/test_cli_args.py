@@ -20,3 +20,27 @@ class TestCLIArgs(unittest.TestCase):
         args = CLIArgParser().parser.parse_args(["parse", "-f", "other.fdx"])
         self.assertEqual(args.command, "parse")
         self.assertEqual(args.file, "other.fdx")
+
+    def test_parse_file_info_flag(self):
+        args = CLIArgParser().parser.parse_args(
+            ["parse", "-f", "x.fdx", "--file-info"]
+        )
+        self.assertEqual(args.command, "parse")
+        self.assertTrue(args.file_info)
+
+    def test_parse_metadata_checksum_file_info_flags_together(self):
+        args = CLIArgParser().parser.parse_args(
+            [
+                "parse",
+                "-f",
+                "script.fdx",
+                "--metadata",
+                "--checksum",
+                "--file-info",
+            ]
+        )
+        self.assertEqual(args.command, "parse")
+        self.assertEqual(args.file, "script.fdx")
+        self.assertTrue(args.metadata)
+        self.assertTrue(args.checksum)
+        self.assertTrue(args.file_info)

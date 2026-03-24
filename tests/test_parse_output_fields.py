@@ -129,10 +129,77 @@ def test_parse_with_checksum_includes_checksums(sample_fdx_path, tmp_path):
     assert "scenes" in c
     assert "title_page" in c
     assert "preamble" in c
-    for key, val in c.items():
+    section_keys = (
+        "alt_collection",
+        "scenes",
+        "title_page",
+        "preamble",
+    )
+    for key in section_keys:
+        val = c[key]
         assert isinstance(val, str)
         assert len(val) == 64
         assert re.match(r"^[a-f0-9]+$", val), f"{key} checksum must be 64 hex"
+    assert "scene_checksums" in c
+    sc = c["scene_checksums"]
+    assert isinstance(sc, list)
+    assert len(sc) == len(data["scenes"])
+    for i, h in enumerate(sc):
+        assert isinstance(h, str) and len(h) == 64
+        assert re.match(
+            r"^[a-f0-9]+$", h
+        ), f"scene index {i} checksum must be 64 hex"
+
+
+def test_parse_metadata_checksum_file_info_together(sample_fdx_path, tmp_path):
+    """--metadata, --checksum, and --file-info can all be used together."""
+    from cli import run_parse
+
+    out1 = tmp_path / "out1.json"
+    out2 = tmp_path / "out2.json"
+
+    def make_args(output_path):
+        return type(
+            "Args",
+            (),
+            {
+                "command": "parse",
+                "file": str(sample_fdx_path),
+                "output": str(output_path),
+                "metadata": True,
+                "checksum": True,
+                "file_info": True,
+            },
+        )()
+
+    run_parse(make_args(out1))
+    run_parse(make_args(out2))
+    d1 = json.loads(out1.read_text(encoding="utf-8"))
+    d2 = json.loads(out2.read_text(encoding="utf-8"))
+
+    for data in (d1, d2):
+        assert "nonce" in data and "parser_version" in data
+        assert "parse_datetime" in data
+        assert "metadata" in data
+        assert data["metadata"]["scenes_count"] == len(data["scenes"])
+        assert "checksums" in data
+        c = data["checksums"]
+        assert "metadata" in c
+        assert "scene_checksums" in c
+        assert len(c["scene_checksums"]) == len(data["scenes"])
+        assert "source_file" in data
+        sf = data["source_file"]
+        assert sf["name"] == sample_fdx_path.name
+        assert sf["size_bytes"] == sample_fdx_path.stat().st_size
+        assert "path_resolved" in sf and "modified" in sf
+
+    assert d1["nonce"] != d2["nonce"]
+    assert d1["checksums"] == d2["checksums"]
+    assert (
+        d1["source_file"]["path_resolved"]
+        == d2["source_file"]["path_resolved"]
+    )
+    assert d1["source_file"]["size_bytes"] == d2["source_file"]["size_bytes"]
 
 
 def test_parse_with_metadata_and_checksum_includes_metadata_checksum(
@@ -219,6 +286,10 @@ def test_parse_checksums_deterministic_with_dual_dialogue(
     d2 = json.loads(out2.read_text(encoding="utf-8"))
     assert d1["checksums"]["scenes"] == d2["checksums"]["scenes"]
     assert d1["checksums"]["preamble"] == d2["checksums"]["preamble"]
+    assert (
+        d1["checksums"]["scene_checksums"]
+        == d2["checksums"]["scene_checksums"]
+    )
 
 
 def test_parse_checksums_deterministic(sample_fdx_path, tmp_path):

@@ -48,6 +48,12 @@ class CLIArgParser(object):
             action="store_true",
             help="Add SHA-256 checksums for sections to JSON output",
         )
+        parse_parser.add_argument(
+            "--file-info",
+            action="store_true",
+            dest="file_info",
+            help="Include source file path, size, and timestamps in JSON",
+        )
         parse_parser.set_defaults(command="parse")
 
         fountain_parser = subparsers.add_parser(
