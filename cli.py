@@ -14,6 +14,7 @@ from dataclasses import asdict
 from schoonmaker.cli_arg_parser import CLIArgParser
 from schoonmaker.fdx import FDXParser, screenplay_to_fountain
 from schoonmaker.metadata import compute_screenplay_metadata
+from schoonmaker.source_file_info import source_file_info
 from schoonmaker.utils import set_up_logging, get_logger
 from schoonmaker.version import version as parser_version
 
@@ -147,6 +148,8 @@ def run_parse(args) -> int:
     out.update(asdict(screenplay))
     if getattr(args, "metadata", False):
         out["metadata"] = compute_screenplay_metadata(screenplay)
+    if getattr(args, "file_info", False):
+        out["source_file"] = source_file_info(args.file)
     if getattr(args, "checksum", False):
         out["checksums"] = _compute_output_checksums(out)
     payload = json.dumps(out, indent=2, ensure_ascii=False)

@@ -46,6 +46,9 @@ python cli.py parse -f path/to/script.fdx -o script.json --metadata
 # Add SHA-256 checksums for sections (alts, scenes, etc.) to JSON (for easier diffing)
 python cli.py parse -f path/to/script.fdx -o script.json --checksum
 
+# Include source file path, size, and filesystem timestamps in the JSON
+python cli.py parse -f path/to/script.fdx -o script.json --file-info
+
 # Emit FDX → Fountain to stdout
 python cli.py fountain -f path/to/script.fdx
 
@@ -63,6 +66,6 @@ docker compose build && docker compose run --rm schoonmaker
 # docker compose run --rm -v "$(pwd)/my-scripts:/data:ro" schoonmaker python cli.py parse -f /data/script.fdx -o /data/out.json
 ```
 
-Parse JSON output always includes **`nonce`** (unique per run), **`parser_version`** (from `schoonmaker.version`), and **`parse_datetime`** (UTC ISO). With **`--checksum`**, a **`checksums`** object is added with SHA-256 hashes for `alt_collection`, `scenes`, `title_page`, and `preamble` (each is the hash of canonical JSON of that section after normalizing away run-varying IDs). **`scene_checksums`** is a parallel list of SHA-256 digests, one per scene in order, so a diff can show which scene indices changed without re-parsing the full `scenes` array.
+Parse JSON output always includes **`nonce`** (unique per run), **`parser_version`** (from `schoonmaker.version`), and **`parse_datetime`** (UTC ISO). With **`--checksum`**, a **`checksums`** object is added with SHA-256 hashes for `alt_collection`, `scenes`, `title_page`, and `preamble` (each is the hash of canonical JSON of that section after normalizing away run-varying IDs). **`scene_checksums`** is a parallel list of SHA-256 digests, one per scene in order, so a diff can show which scene indices changed without re-parsing the full `scenes` array. With **`--file-info`**, a **`source_file`** object records the input path (as given and resolved), basename, **`size_bytes`**, and UTC ISO **`modified`** / **`accessed`** times; **`created`** is included when the OS exposes it (e.g. Windows, macOS).
 
 See **AGENTS.md** for layout, conventions, and full command reference.
