@@ -64,7 +64,13 @@ def scene_digests(data: dict[str, Any]) -> list[str]:
 
 
 def _meta_counts(meta: dict[str, Any] | None) -> dict[str, int]:
-    """Flat word and element totals from metadata (0 if missing)."""
+    """
+    Flat totals from ``compute_screenplay_metadata`` output (0 if missing).
+
+    Word keys match metadata: action, dialogue, scene headings, and
+    parentheticals only (transition/shot/general/lyric words roll into
+    ``total_words`` but are not exposed separately there).
+    """
     if not meta:
         return {}
     out: dict[str, int] = {}
@@ -73,10 +79,6 @@ def _meta_counts(meta: dict[str, Any] | None) -> dict[str, int]:
         "total_action_words",
         "total_dialogue_words",
         "total_scene_heading_words",
-        "total_transition_words",
-        "total_shot_words",
-        "total_general_words",
-        "total_lyric_words",
         "total_parenthetical_words",
         "total_parenthetical_count",
         "total_dialogue_line_count",
