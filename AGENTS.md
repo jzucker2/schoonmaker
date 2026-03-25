@@ -1,6 +1,6 @@
 # Agent instructions (schoonmaker)
 
-This repo is a **Python tool** for working with Final Draft `.fdx` screenplay files. It parses FDX XML, builds a structured model, and can output JSON AST or Fountain text.
+This repo is a **Python tool** for working with Final Draft `.fdx` screenplay files. It parses FDX XML, builds a structured model, and can output JSON AST or Fountain text, or diff two parse JSON snapshots.
 
 ## Layout
 
@@ -12,8 +12,9 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
   - **`cli_arg_parser.py`** – CLI argument parsing (file path, subcommands).
   - **`metadata.py`** – `compute_screenplay_metadata(screenplay)` for scene/character/line stats (used when `parse --metadata`).
   - **`source_file_info.py`** – `source_file_info(path)` for optional `parse --file-info` JSON (`path_resolved`, `size_bytes`, timestamps).
-  - **`utils.py`** – Logging helpers.
-- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain` (see Commands). Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `--checksum`, adds a `checksums` object (SHA-256 per section plus `scene_checksums`, one digest per scene in order).
+  - **`parse_json_diff.py`** – `build_diff_report`, `load_parse_json`, `scene_digests` for `cli.py diff`.
+  - **`utils.py`** – Logging helpers; `strip_run_varying_ids` (shared checksum / diff normalization).
+- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain`, `diff` (see Commands). Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `--checksum`, adds a `checksums` object (SHA-256 per section plus `scene_checksums`, one digest per scene in order).
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
@@ -57,6 +58,10 @@ python cli.py parse -f path/to/script.fdx -o script.json --file-info
 # All optional parse flags together (metadata, checksums, source file stats)
 python cli.py parse -f path/to/script.fdx -o script.json \
   --metadata --checksum --file-info
+
+# Diff two parse JSON files (JSON report to stdout or -o)
+python cli.py diff --before older.json --after newer.json
+python cli.py diff -b older.json -a newer.json -o report.json
 
 # Emit FDX → Fountain to stdout
 python cli.py fountain -f path/to/script.fdx

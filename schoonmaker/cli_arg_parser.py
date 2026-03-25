@@ -9,7 +9,10 @@ class CLIArgParser(object):
     def __init__(self):
         self.parser = ArgumentParser(
             prog="schoonmaker",
-            description="Parse FDX files; export JSON AST or Fountain.",
+            description=(
+                "Parse FDX; export JSON AST or Fountain; "
+                "diff two parse JSON snapshots."
+            ),
         )
         subparsers = self.parser.add_subparsers(dest="command", required=True)
 
@@ -70,6 +73,34 @@ class CLIArgParser(object):
             "-o", "--output", type=str, help="Path to output Fountain file"
         )
         fountain_parser.set_defaults(command="fountain")
+
+        diff_parser = subparsers.add_parser(
+            "diff",
+            help="Compare two parse JSON files (before/after)",
+        )
+        diff_parser.add_argument(
+            "--before",
+            "-b",
+            type=str,
+            required=True,
+            metavar="PATH",
+            help="Earlier parse JSON baseline (-b for --before)",
+        )
+        diff_parser.add_argument(
+            "--after",
+            "-a",
+            type=str,
+            required=True,
+            metavar="PATH",
+            help="Later parse JSON (-a for --after)",
+        )
+        diff_parser.add_argument(
+            "-o",
+            "--output",
+            type=str,
+            help="Write diff report JSON to this path (default: stdout)",
+        )
+        diff_parser.set_defaults(command="diff")
 
     def _parse_args(self) -> Namespace:
         return self.parser.parse_args()
