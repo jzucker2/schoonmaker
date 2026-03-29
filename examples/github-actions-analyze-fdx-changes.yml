@@ -1,0 +1,70 @@
+# Example: copy to ANOTHER repo as .github/workflows/fdx-changes.yml
+#
+# - Pin schoonmaker: pip install "git+https://github.com/YOUR_ORG/schoonmaker.git@v1.0.1"
+# - Adjust on.pull_request.paths if your FDX files are only under e.g. scripts/
+
+name: Analyze changed FDX
+
+on:
+  pull_request:
+    paths:
+      - '**/*.fdx'
+      - '**/*.FDX'
+
+jobs:
+  diff-fdx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install schoonmaker
+        run: |
+          pip install "git+https://github.com/YOUR_ORG/schoonmaker.git@main"
+
+      - name: Parse and diff changed FDX files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p fdx-reports
+          mapfile -t FILES < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- '*.fdx' '*.FDX' || true)
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "No .fdx files in this diff."
+            exit 0
+          fi
+          for f in "${FILES[@]}"; do
+            safe=$(echo "$f" | tr '/' '_' | tr ' ' '_')
+            has_before=true
+            git show "$BASE_SHA:$f" > "/tmp/before_${safe}.fdx" 2>/dev/null || has_before=false
+            if ! git cat-file -e "$HEAD_SHA:$f" 2>/dev/null; then
+              echo "Deleted in PR: $f" > "fdx-reports/${safe}-deleted.txt"
+              continue
+            fi
+            git show "$HEAD_SHA:$f" > "/tmp/after_${safe}.fdx"
+            if [ "$has_before" = true ]; then
+              schoonmaker parse -f "/tmp/before_${safe}.fdx" -o "/tmp/before_${safe}.json" \
+                --metadata --checksum
+              schoonmaker parse -f "/tmp/after_${safe}.fdx" -o "/tmp/after_${safe}.json" \
+                --metadata --checksum
+              schoonmaker diff --before "/tmp/before_${safe}.json" \
+                --after "/tmp/after_${safe}.json" \
+                -o "fdx-reports/${safe}-diff.json"
+            else
+              echo "New file: $f" > "fdx-reports/${safe}-new.txt"
+              schoonmaker parse -f "/tmp/after_${safe}.fdx" \
+                -o "fdx-reports/${safe}-parse.json" --metadata --checksum
+            fi
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fdx-analysis
+          path: fdx-reports/

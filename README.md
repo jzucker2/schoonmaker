@@ -82,6 +82,16 @@ docker compose build && docker compose run --rm schoonmaker
 # docker compose run --rm -v "$(pwd)/my-scripts:/data:ro" schoonmaker schoonmaker parse -f /data/script.fdx -o /data/out.json
 ```
 
+### Using this repo from another project (GitHub Actions)
+
+To **analyze any changed `.fdx` files** on pull requests (e.g. word/scene/character deltas vs the base branch):
+
+1. In the **other** repo, add a workflow that installs schoonmaker, lists changed FDX paths with `git diff` between `pull_request.base.sha` and `pull_request.head.sha`, and for each path checks out both sides with `git show <sha>:path`.
+2. Run **`schoonmaker parse --metadata --checksum`** on each side (or only on HEAD for new files), then **`schoonmaker diff --before before.json --after after.json`** for renames/modifications.
+3. Upload the JSON reports as **artifacts**, or post a summary to the PR with a small script (`jq` / Python).
+
+A copy-paste template is in **`examples/github-actions-analyze-fdx-changes.yml`**. Install schoonmaker with pip from this GitHub repo and **pin a tag or commit** (replace `YOUR_ORG` and `@main`). For private repos, use a [`pip` URL with a token](https://pip.pypa.io/en/stable/topics/authentication/) or vendor a wheel.
+
 Parse JSON output always includes **`nonce`** (unique per run), **`parser_version`** (from `schoonmaker.version`), and **`parse_datetime`** (UTC ISO). With **`--checksum`**, a **`checksums`** object is added with SHA-256 hashes for `alt_collection`, `scenes`, `title_page`, and `preamble` (each is the hash of canonical JSON of that section after normalizing away run-varying IDs). **`scene_checksums`** is a parallel list of SHA-256 digests, one per scene in order, so a diff can show which scene indices changed without re-parsing the full `scenes` array. With **`--file-info`**, a **`source_file`** object records the input path (as given and resolved), basename, **`size_bytes`**, and UTC ISO **`modified`** / **`accessed`** times; **`created`** is included when the OS exposes it (e.g. Windows, macOS).
 
 The **`diff`** subcommand reads two parse JSON files and writes a report with **`scenes`** (counts, **`changed_indices`**, **`added_scene_indices`**, **`removed_scene_indices`**), **`counts`** (word and paragraph totals with before/after/delta), **`elements`** (action, dialogue lines, etc.), **`characters`** (new, removed, line/scene deltas), and **`locations`** (summary and per-location scene-count changes). Pass **`--metadata`** when generating both JSON files for full stats; scene-level changes are always derived from **`scenes`** using the same digest rules as parse checksums (stale **`scene_checksums`** in hand-edited JSON are not trusted).
