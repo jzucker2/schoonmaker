@@ -1,6 +1,9 @@
 """Tests for CLI arg parsing: -f is per-subcommand and respected."""
 
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 
 from schoonmaker.cli_arg_parser import DEFAULT_SAMPLE_FILE_PATH, CLIArgParser
 
@@ -53,3 +56,15 @@ class TestCLIArgs(unittest.TestCase):
         self.assertEqual(args.before, "old.json")
         self.assertEqual(args.after, "new.json")
         self.assertEqual(args.output, "out.json")
+
+
+def test_python_m_schoonmaker_run_help():
+    """``python -m schoonmaker`` works from the repo (package layout + __main__)."""  # noqa: E501
+    repo_root = Path(__file__).resolve().parent.parent
+    r = subprocess.run(
+        [sys.executable, "-m", "schoonmaker", "run", "-h"],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+    )
+    assert r.returncode == 0, (r.stdout, r.stderr)

@@ -29,8 +29,6 @@ make lint
 make check
 ```
 
-Tests include **`tests/test_installed_package.py`**, which creates a fresh venv, runs **`pip install -e .`**, and checks the **`schoonmaker`** console script and **`python -m schoonmaker`**.
-
 ## CLI usage
 
 After installation, the **`schoonmaker`** command is on your `PATH`. Same behavior: **`python -m schoonmaker`** (from any cwd, if the package is importable), or from a clone without installing: **`python cli.py`** (thin wrapper in the repo root).
