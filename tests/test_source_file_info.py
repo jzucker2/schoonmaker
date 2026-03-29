@@ -28,7 +28,7 @@ def test_source_file_info_matches_file(tmp_path):
 
 def test_parse_with_file_info_includes_source_file(sample_fdx_path, tmp_path):
     """With --file-info, JSON includes source_file with expected keys."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out = tmp_path / "out.json"
     args = type(

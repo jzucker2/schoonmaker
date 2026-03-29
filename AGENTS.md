@@ -4,7 +4,10 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
 
 ## Layout
 
+- **`pyproject.toml`** – Package metadata and the **`schoonmaker`** console script (`setuptools`).
 - **`schoonmaker/`** – Main package.
+  - **`cli.py`** – CLI implementation: `main()`, `run_parse`, `run_diff`, checksum helpers, etc.
+  - **`__main__.py`** – Supports **`python -m schoonmaker`**.
   - **`fdx/`** – FDX parsing and export (single parser path):
     - **`models.py`** – Dataclasses for Screenplay, Scene, SceneHeading, DialogueBlock, Action, Transition, etc.
     - **`parser.py`** – `FDXParser`: streaming-ish parser that produces `Screenplay` from an FDX path.
@@ -12,13 +15,13 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
   - **`cli_arg_parser.py`** – CLI argument parsing (file path, subcommands).
   - **`metadata.py`** – `compute_screenplay_metadata(screenplay)` for scene/character/line stats (used when `parse --metadata`).
   - **`source_file_info.py`** – `source_file_info(path)` for optional `parse --file-info` JSON (`path_resolved`, `size_bytes`, timestamps).
-  - **`parse_json_diff.py`** – `build_diff_report`, `load_parse_json`, `scene_digests` for `cli.py diff`.
+  - **`parse_json_diff.py`** – `build_diff_report`, `load_parse_json`, `scene_digests` for `schoonmaker diff`.
   - **`utils.py`** – Logging helpers; `strip_run_varying_ids` (shared checksum / diff normalization).
-- **`cli.py`** – Entry point: subcommands `run`, `parse`, `fountain`, `diff` (see Commands). Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `--checksum`, adds a `checksums` object (SHA-256 per section plus `scene_checksums`, one digest per scene in order).
-- **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
+- **`cli.py`** (repo root) – Thin shim calling `schoonmaker.cli:main` so **`python cli.py`** still works from a clone without installing.
+- **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`). **`test_installed_package.py`** installs the project with **`pip install -e .`** in a temp venv and exercises the **`schoonmaker`** entry point.
 - **`samples/`** – Sample FDX files for manual use.
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
-- **`requirements-dev.txt`** – Dev deps: black, flake8, pytest, pytest-cov, pre-commit, etc.
+- **`requirements-dev.txt`** – `-e .` plus dev deps: black, flake8, pytest, pytest-cov, pre-commit, etc.
 - **`Makefile`** – `make test`, `make check`, `make format`, `make lint`, `make ci-check`.
 - **`.flake8`**, **`.pre-commit-config.yaml`** – Lint and pre-commit config. **`.yamllint`** – YAML style (2-space indent, no `---`).
 
@@ -27,47 +30,48 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
 Use the **existing local venv** at the repo root:
 
 - Activate: `source venv/bin/activate` (macOS/Linux) or `venv\Scripts\activate` (Windows).
-- Run CLI: `python cli.py …` (or `venv/bin/python cli.py …` without activating).
+- Install: **`pip install -r requirements-dev.txt`** (editable package + dev tools), or **`pip install .`** for runtime only.
+- Run CLI: **`schoonmaker …`**, or **`python -m schoonmaker …`**, or **`python cli.py …`** from the repo root (wrapper).
 - Run tests: `make test` (pytest) or `pytest -v` from repo root with venv active.
 
 If the venv is missing or broken: `python -m venv venv` then `venv/bin/pip install -r requirements-dev.txt`.
 
 ## Commands (from repo root, with venv)
 
-Options like `-f`/`--file` are per-subcommand; pass them after the command (e.g. `cli.py run -f file.fdx`).
+Options like `-f`/`--file` are per-subcommand; pass them after the command (e.g. `schoonmaker run -f file.fdx`).
 
 ```bash
 # Parse FDX and print a short summary (document_type, version, scene count)
-python cli.py run -f path/to/script.fdx
+schoonmaker run -f path/to/script.fdx
 
 # Emit FDX → JSON AST to stdout
-python cli.py parse -f path/to/script.fdx
+schoonmaker parse -f path/to/script.fdx
 
 # Write JSON AST to a file
-python cli.py parse -f path/to/script.fdx -o script.json
+schoonmaker parse -f path/to/script.fdx -o script.json
 
 # Include computed metadata (scene/character/line counts) in the JSON
-python cli.py parse -f path/to/script.fdx -o script.json --metadata
+schoonmaker parse -f path/to/script.fdx -o script.json --metadata
 
 # Add SHA-256 checksums for sections to JSON (for easier diffing)
-python cli.py parse -f path/to/script.fdx -o script.json --checksum
+schoonmaker parse -f path/to/script.fdx -o script.json --checksum
 
 # Include source file path, size, and timestamps in JSON
-python cli.py parse -f path/to/script.fdx -o script.json --file-info
+schoonmaker parse -f path/to/script.fdx -o script.json --file-info
 
 # All optional parse flags together (metadata, checksums, source file stats)
-python cli.py parse -f path/to/script.fdx -o script.json \
+schoonmaker parse -f path/to/script.fdx -o script.json \
   --metadata --checksum --file-info
 
 # Diff two parse JSON files (JSON report to stdout or -o)
-python cli.py diff --before older.json --after newer.json
-python cli.py diff -b older.json -a newer.json -o report.json
+schoonmaker diff --before older.json --after newer.json
+schoonmaker diff -b older.json -a newer.json -o report.json
 
 # Emit FDX → Fountain to stdout
-python cli.py fountain -f path/to/script.fdx
+schoonmaker fountain -f path/to/script.fdx
 
 # Write Fountain to a file
-python cli.py fountain -f path/to/script.fdx -o script.fountain
+schoonmaker fountain -f path/to/script.fdx -o script.fountain
 
 # Run tests
 make test
@@ -83,6 +87,8 @@ make pre-commit-run
 # Full CI-style check (pre-commit + tests)
 make ci-check
 ```
+
+Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `--checksum`, adds a `checksums` object (SHA-256 per section plus `scene_checksums`, one digest per scene in order).
 
 ## Conventions
 

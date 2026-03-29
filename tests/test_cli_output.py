@@ -9,7 +9,7 @@ from pathlib import Path
 def test_parse_o_creates_output_file(sample_fdx_path, tmp_path):
     """parse -f <fdx> -o <path> creates the file and writes valid JSON."""
     out = tmp_path / "out.json"
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     class Args:
         command = "parse"
@@ -28,7 +28,7 @@ def test_parse_o_creates_output_file(sample_fdx_path, tmp_path):
 def test_fountain_o_creates_output_file(sample_fdx_path, tmp_path):
     """fountain -f <fdx> -o <path> creates the file with Fountain text."""
     out = tmp_path / "out.fountain"
-    from cli import run_fountain
+    from schoonmaker.cli import run_fountain
 
     class Args:
         command = "fountain"
@@ -44,13 +44,13 @@ def test_fountain_o_creates_output_file(sample_fdx_path, tmp_path):
 
 
 def test_parse_via_subprocess_creates_file(sample_fdx_path, tmp_path):
-    """'python cli.py parse -f <fdx> -o <path>' creates the output file."""
+    """``python -m schoonmaker parse -f <fdx> -o <path>`` creates the file."""
     out = tmp_path / "subprocess_out.json"
     repo_root = Path(__file__).resolve().parent.parent
-    cli_py = repo_root / "cli.py"
     cmd = [
         sys.executable,
-        str(cli_py),
+        "-m",
+        "schoonmaker",
         "parse",
         "-f",
         str(sample_fdx_path),
@@ -61,7 +61,7 @@ def test_parse_via_subprocess_creates_file(sample_fdx_path, tmp_path):
         cmd,
         capture_output=True,
         text=True,
-        cwd=str(cli_py.parent),
+        cwd=str(repo_root),
     )
     assert result.returncode == 0, (result.stdout, result.stderr)
     assert out.exists()

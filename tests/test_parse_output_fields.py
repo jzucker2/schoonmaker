@@ -8,7 +8,7 @@ from schoonmaker.version import version as PARSER_VERSION
 
 def test_parse_output_has_nonce(sample_fdx_path, tmp_path):
     """Parse output includes nonce (unique per run)."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out = tmp_path / "out.json"
     args = type(
@@ -34,7 +34,7 @@ def test_parse_output_has_nonce(sample_fdx_path, tmp_path):
 
 def test_parse_output_has_parser_version(sample_fdx_path, tmp_path):
     """Parse output includes parser_version from version.py."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out = tmp_path / "out.json"
     args = type(
@@ -56,7 +56,7 @@ def test_parse_output_has_parser_version(sample_fdx_path, tmp_path):
 
 def test_parse_output_has_parse_datetime(sample_fdx_path, tmp_path):
     """Parse output includes parse_datetime (ISO format)."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out = tmp_path / "out.json"
     args = type(
@@ -79,7 +79,7 @@ def test_parse_output_has_parse_datetime(sample_fdx_path, tmp_path):
 
 def test_parse_output_nonce_differs_each_run(sample_fdx_path, tmp_path):
     """Two parse runs produce different nonces."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out1 = tmp_path / "out1.json"
     out2 = tmp_path / "out2.json"
@@ -107,7 +107,7 @@ def test_parse_output_nonce_differs_each_run(sample_fdx_path, tmp_path):
 
 def test_parse_with_checksum_includes_checksums(sample_fdx_path, tmp_path):
     """With --checksum, output has checksums for alts, scenes, etc."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out = tmp_path / "out.json"
     args = type(
@@ -153,7 +153,7 @@ def test_parse_with_checksum_includes_checksums(sample_fdx_path, tmp_path):
 
 def test_parse_metadata_checksum_file_info_together(sample_fdx_path, tmp_path):
     """--metadata, --checksum, and --file-info can all be used together."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out1 = tmp_path / "out1.json"
     out2 = tmp_path / "out2.json"
@@ -206,7 +206,7 @@ def test_parse_with_metadata_and_checksum_includes_metadata_checksum(
     sample_fdx_path, tmp_path
 ):
     """With --metadata and --checksum, output has a metadata checksum."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out = tmp_path / "out.json"
     args = type(
@@ -232,7 +232,7 @@ def test_parse_with_metadata_and_checksum_includes_metadata_checksum(
 
 def test_parse_metadata_checksum_deterministic(sample_fdx_path, tmp_path):
     """Same file with --metadata and --checksum: metadata checksum is equal."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out1 = tmp_path / "out1.json"
     out2 = tmp_path / "out2.json"
@@ -262,7 +262,7 @@ def test_parse_checksums_deterministic_with_dual_dialogue(
     sample_fdx13_path, tmp_path
 ):
     """With dual dialogue, scenes and preamble checksums are deterministic."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out1 = tmp_path / "out1.json"
     out2 = tmp_path / "out2.json"
@@ -294,7 +294,7 @@ def test_parse_checksums_deterministic_with_dual_dialogue(
 
 def test_parse_checksums_deterministic(sample_fdx_path, tmp_path):
     """Same file parsed twice with --checksum yields same checksums."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out1 = tmp_path / "out1.json"
     out2 = tmp_path / "out2.json"

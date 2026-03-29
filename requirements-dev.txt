@@ -1,5 +1,6 @@
 # Development and testing dependencies (includes prod deps via -r)
 -r requirements.txt
+-e .
 black==24.1.1
 flake8==7.0.0
 pytest==8.4.1

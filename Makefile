@@ -16,26 +16,26 @@ clean: ## Clean up generated files
 	rm -rf .pytest_cache
 	rm -rf htmlcov
 
-install: ## Install this project's runtime deps
-	pip install -r requirements.txt
+install: ## Install this package (runtime; no extra deps beyond stdlib)
+	pip install .
 
-install-dev: ## Install development dependencies
+install-dev: ## Editable install + dev dependencies (pytest, flake8, etc.)
 	pip install -r requirements-dev.txt
 
 format: ## Format code with black (fix in place). Then run 'make lint' — black may leave lines >79 chars; flake8 E501 requires all lines ≤79.
-	black schoonmaker/ tests/ --line-length=79
+	black schoonmaker/ tests/ cli.py --line-length=79
 
 format-check: ## Check formatting with black (no fix, fails if invalid)
-	black schoonmaker/ tests/ --line-length=79 --check
+	black schoonmaker/ tests/ cli.py --line-length=79 --check
 
 lint: ## Lint with flake8 (E501: max line length 79). Run after 'make format' to catch long comments/docstrings.
-	flake8 schoonmaker/ tests/
+	flake8 schoonmaker/ tests/ cli.py
 
 check: format-check lint ## Run all checks (format check + lint, no auto-fix)
 
 lint-fix: ## Auto-fix linting issues where possible (autopep8 then black so black wins)
-	autopep8 --in-place --recursive --aggressive --aggressive schoonmaker/ tests/
-	black schoonmaker/ tests/ --line-length=79
+	autopep8 --in-place --recursive --aggressive --aggressive schoonmaker/ tests/ cli.py
+	black schoonmaker/ tests/ cli.py --line-length=79
 
 pre-commit-install: ## Install pre-commit hooks
 	pre-commit install

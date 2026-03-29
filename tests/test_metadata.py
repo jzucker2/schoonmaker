@@ -17,7 +17,7 @@ class ParseArgs:
 
 def test_metadata_without_flag_omits_metadata(sample_fdx_path, tmp_path):
     """parse without --metadata does not include 'metadata' key in JSON."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out = tmp_path / "out.json"
     args = ParseArgs(sample_fdx_path, out, metadata=False)
@@ -28,7 +28,7 @@ def test_metadata_without_flag_omits_metadata(sample_fdx_path, tmp_path):
 
 def test_metadata_with_flag_includes_metadata(sample_fdx_path, tmp_path):
     """With --metadata, JSON has 'metadata' key with expected structure."""
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     out = tmp_path / "out.json"
     args = ParseArgs(sample_fdx_path, out, metadata=True)
@@ -221,17 +221,17 @@ def test_metadata_aggregates_match_per_scene_and_elements(sample_fdx_path):
 
 
 def test_metadata_cli_subprocess(sample_fdx_path, tmp_path):
-    """python cli.py parse --metadata -f <fdx> -o <path> writes metadata."""
+    """``python -m schoonmaker parse --metadata`` writes metadata."""
     import subprocess
     import sys
 
     out = tmp_path / "meta_out.json"
     repo_root = Path(__file__).resolve().parent.parent
-    cli_py = repo_root / "cli.py"
     result = subprocess.run(
         [
             sys.executable,
-            str(cli_py),
+            "-m",
+            "schoonmaker",
             "parse",
             "--metadata",
             "-f",
@@ -241,7 +241,7 @@ def test_metadata_cli_subprocess(sample_fdx_path, tmp_path):
         ],
         capture_output=True,
         text=True,
-        cwd=str(cli_py.parent),
+        cwd=str(repo_root),
     )
     assert result.returncode == 0, (result.stdout, result.stderr)
     data = json.loads(out.read_text(encoding="utf-8"))

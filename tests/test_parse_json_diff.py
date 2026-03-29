@@ -1,4 +1,4 @@
-"""Tests for parse JSON diff (cli.py diff)."""
+"""Tests for parse JSON diff (``schoonmaker diff``)."""
 
 import json
 import subprocess
@@ -16,7 +16,7 @@ from schoonmaker.parse_json_diff import (
 
 
 def _run_parse_json(out_path, fdx_path, **flags):
-    from cli import run_parse
+    from schoonmaker.cli import run_parse
 
     a = type(
         "Args",
@@ -122,7 +122,6 @@ def test_load_parse_json_invalid(tmp_path):
 
 def test_cli_diff_subprocess(sample_fdx_path, tmp_path):
     repo = Path(__file__).resolve().parent.parent
-    cli = repo / "cli.py"
     ja = tmp_path / "a.json"
     jb = tmp_path / "b.json"
     out = tmp_path / "diff.json"
@@ -131,7 +130,8 @@ def test_cli_diff_subprocess(sample_fdx_path, tmp_path):
     proc = subprocess.run(
         [
             sys.executable,
-            str(cli),
+            "-m",
+            "schoonmaker",
             "diff",
             "--before",
             str(ja),
