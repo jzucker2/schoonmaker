@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["python", "cli.py", "run"]
+    command: ["schoonmaker", "run"]
     # Override to parse/export: e.g. parse -f /data/script.fdx -o /data/out.json
     # volumes:
     #   - ./my-scripts:/data:ro

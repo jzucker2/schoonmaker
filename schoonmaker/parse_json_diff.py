@@ -14,7 +14,7 @@ DIFF_REPORT_VERSION = 1
 
 
 def load_parse_json(path: str | Path) -> dict[str, Any]:
-    """Load a JSON file produced by ``cli.py parse``."""
+    """Load a JSON file produced by ``schoonmaker parse``."""
     p = Path(path)
     text = p.read_text(encoding="utf-8")
     data = json.loads(text)
