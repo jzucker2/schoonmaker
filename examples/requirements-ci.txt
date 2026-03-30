@@ -2,4 +2,4 @@
 # (next to .github/) and pin org + tag or commit.
 #
 # Replace YOUR_ORG and the ref after @ (use a tag or SHA, not a moving branch).
-git+https://github.com/YOUR_ORG/schoonmaker.git@v1.0.1
+git+https://github.com/jzucker2/schoonmaker.git@1.1.1
