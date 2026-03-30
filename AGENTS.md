@@ -21,7 +21,9 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
 - **`cli.py`** (repo root) – Thin shim calling `schoonmaker.cli:main` so **`python cli.py`** still works from a clone without installing.
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
-- **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-*.yml`), **`requirements-ci.txt`**, and **`examples/README.md`**. These should mirror how the tool is actually invoked (see Conventions).
+- **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-*.yml`),
+  **`requirements-ci.txt`**, and **`examples/README.md`**. They should mirror real
+  CLI usage (see **When adding or changing behavior** below).
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
 - **`requirements-dev.txt`** – `-e .` plus dev deps: black, flake8, pytest, pytest-cov, pre-commit, etc.
 - **`Makefile`** – `make test`, `make check`, `make format`, `make lint`, `make ci-check`.
@@ -102,6 +104,11 @@ Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `
 - **Format and lint:** Black (`make format`) uses `--line-length=79` but does **not** shorten every long line (e.g. comments and docstrings are often left as-is). Flake8 E501 fails on **any** line over 79 characters. So after `make format`, run **`make lint`** (or `make check`); fix any E501 by shortening those lines (break or reword comments/docstrings) so both format and lint pass.
 - **When adding or changing behavior:**
   - Keep **README** and this **AGENTS.md** in sync; update README when CLI, layout, or usage changes.
-  - Keep **`examples/`** in sync with the **parser**, **CLI**, **`parse`/`diff` output**, **`ci-fdx-diff`**, and anything those workflows depend on (flags, env vars, artifact layout, install instructions). If you change how CI should call schoonmaker, update the YAML, **`examples/requirements-ci.txt`** when the install story changes, and **`examples/README.md`** so copied workflows stay accurate.
+  - Keep **`examples/`** in sync with the **parser**, **CLI**, **`parse`/`diff`**
+    output, **`ci-fdx-diff`**, and anything those workflows depend on (flags,
+    env vars, artifact layout, install instructions).
+  - When CI usage of schoonmaker changes, update the workflow YAML under
+    **`examples/`**, **`examples/requirements-ci.txt`** if install or pinning
+    changes, and **`examples/README.md`** so copied templates stay accurate.
   - Add or update tests in **`tests/`** for new or modified behavior; for bug fixes, add or adjust tests when reasonable so the fix is covered.
   - Keep files at a **reasonable length**; split modules or extract helpers when a file grows large or a distinct responsibility appears, so the codebase stays navigable.
