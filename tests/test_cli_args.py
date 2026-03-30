@@ -57,6 +57,23 @@ class TestCLIArgs(unittest.TestCase):
         self.assertEqual(args.after, "new.json")
         self.assertEqual(args.output, "out.json")
 
+    def test_ci_fdx_diff_output_and_shas(self):
+        args = CLIArgParser().parser.parse_args(
+            [
+                "ci-fdx-diff",
+                "-o",
+                "reports",
+                "--base-sha",
+                "aaa",
+                "--head-sha",
+                "bbb",
+            ]
+        )
+        self.assertEqual(args.command, "ci-fdx-diff")
+        self.assertEqual(args.output, "reports")
+        self.assertEqual(args.base_sha, "aaa")
+        self.assertEqual(args.head_sha, "bbb")
+
 
 def test_python_m_schoonmaker_run_help():
     """``python -m schoonmaker`` works from the repo (package layout + __main__)."""  # noqa: E501

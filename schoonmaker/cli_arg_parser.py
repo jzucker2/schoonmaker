@@ -11,7 +11,7 @@ class CLIArgParser(object):
             prog="schoonmaker",
             description=(
                 "Parse FDX; export JSON AST or Fountain; "
-                "diff two parse JSON snapshots."
+                "diff parse JSON snapshots or changed .fdx in git (CI)."
             ),
         )
         subparsers = self.parser.add_subparsers(dest="command", required=True)
@@ -101,6 +101,39 @@ class CLIArgParser(object):
             help="Write diff report JSON to this path (default: stdout)",
         )
         diff_parser.set_defaults(command="diff")
+
+        ci_parser = subparsers.add_parser(
+            "ci-fdx-diff",
+            help="Diff changed .fdx files between two git commits (CI)",
+        )
+        ci_parser.add_argument(
+            "-o",
+            "--output",
+            type=str,
+            required=True,
+            help="Output directory for reports",
+        )
+        ci_parser.add_argument(
+            "--base-sha",
+            type=str,
+            default="",
+            dest="base_sha",
+            help="Base commit (or CI_FDX_BASE_SHA)",
+        )
+        ci_parser.add_argument(
+            "--head-sha",
+            type=str,
+            default="",
+            dest="head_sha",
+            help="Head commit (or CI_FDX_HEAD_SHA)",
+        )
+        ci_parser.add_argument(
+            "--repo",
+            type=str,
+            default="",
+            help="Git repository root (default: current directory)",
+        )
+        ci_parser.set_defaults(command="ci-fdx-diff")
 
     def _parse_args(self) -> Namespace:
         return self.parser.parse_args()

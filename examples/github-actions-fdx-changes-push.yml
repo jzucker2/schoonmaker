@@ -1,0 +1,45 @@
+# Pushes to the default branch: diff .fdx files in this push (before → after).
+#
+# Copy with requirements-ci.txt (see examples/README.md).
+# For PR review, prefer github-actions-fdx-changes-pr.yml.
+#
+# github.event.before is all zeros for some new-branch pushes; ci-fdx-diff
+# resolves the parent of the head commit in Python (same idea as the old bash).
+
+name: FDX changes (push to main)
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - '**/*.fdx'
+      - '**/*.FDX'
+
+jobs:
+  diff-fdx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install schoonmaker
+        run: pip install -r requirements-ci.txt
+
+      - name: Parse and diff changed FDX files
+        env:
+          CI_FDX_BASE_SHA: ${{ github.event.before }}
+          CI_FDX_HEAD_SHA: ${{ github.event.after }}
+        run: schoonmaker ci-fdx-diff -o fdx-reports
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fdx-analysis-push
+          path: fdx-reports/

@@ -1,0 +1,3 @@
+# CI-only deps for FDX analysis workflows. Copy this file to your repo root
+# (next to .github/) and pin org + tag or commit.
+git+https://github.com/jzucker2/schoonmaker.git@1.2.0
