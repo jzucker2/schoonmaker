@@ -44,13 +44,16 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p fdx-reports
+          : > fdx-reports/path-index.tsv
           mapfile -t FILES < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- '*.fdx' '*.FDX' || true)
           if [ ${#FILES[@]} -eq 0 ]; then
             echo "No .fdx files in this diff."
             exit 0
           fi
           for f in "${FILES[@]}"; do
-            safe=$(echo "$f" | tr '/' '_' | tr ' ' '_')
+            # Full-path SHA-256 avoids collisions from tr / → _ (e.g. scripts/a.fdx vs scripts_a.fdx)
+            safe=$(printf '%s' "$f" | sha256sum | awk '{print $1}')
+            printf '%s\t%s\n' "$safe" "$f" >> fdx-reports/path-index.tsv
             has_before=true
             git show "$BASE_SHA:$f" > "/tmp/before_${safe}.fdx" 2>/dev/null || has_before=false
             if ! git cat-file -e "$HEAD_SHA:$f" 2>/dev/null; then
