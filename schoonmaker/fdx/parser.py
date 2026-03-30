@@ -36,9 +36,26 @@ class FDXParser:
     - treat page/layout hints as metadata, not as structure
 
     Also parses Revisions, SmartType, Characters (top-level), ScriptNotes,
-    DocumentRef, AltCollection, TargetScriptLength. Other tags: see
-    notes/FDX_TODO.md.
+    DocumentRef, AltCollection, TargetScriptLength. Optional: ``ListItems``
+    and ``DisplayBoards`` when enabled — stored on the screenplay but not
+    merged into scenes or metadata totals. Other tags: see notes/FDX_TODO.md.
     """
+
+    def __init__(
+        self,
+        *,
+        include_list_items: bool = False,
+        include_display_boards: bool = False,
+    ) -> None:
+        self._include_list_items = include_list_items
+        self._include_display_boards = include_display_boards
+        # Per-<ListItem>; iterparse clears inner nodes before Paragraph end.
+        self._list_item_buf: dict[str, list[Any]] = {
+            "subordinates": [],
+            "paragraphs": [],
+        }
+        self._list_item_text_parts: list[str] = []
+        self._display_board_item_buf: list[dict[str, str]] = []
 
     def parse(self, path: str) -> Screenplay:
         root_meta = self._read_root_metadata(path)
@@ -66,6 +83,14 @@ class FDXParser:
             tag = self._local_name(elem.tag)
 
             if event == "start":
+                if self._include_list_items and tag == "ListItem":
+                    self._list_item_buf = {
+                        "subordinates": [],
+                        "paragraphs": [],
+                    }
+                    self._list_item_text_parts = []
+                if self._include_display_boards and tag == "DisplayBoard":
+                    self._display_board_item_buf = []
                 if tag == "Content":
                     parent = stack[-1] if stack else None
                     if parent == "FinalDraft":
@@ -140,6 +165,112 @@ class FDXParser:
                     screenplay.target_script_length = (
                         self._parse_target_script_length_elem(elem)
                     )
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                if (
+                    self._include_display_boards
+                    and tag == "DisplayBoard"
+                    and len(stack) >= 3
+                    and stack[-2] == "DisplayBoards"
+                    and stack[-3] == "FinalDraft"
+                ):
+                    board: dict[str, Any] = {
+                        "attrs": dict(elem.attrib),
+                        "items": list(self._display_board_item_buf),
+                    }
+                    screenplay.display_boards.append(board)
+                    self._display_board_item_buf = []
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                if (
+                    self._include_display_boards
+                    and tag == "Item"
+                    and len(stack) >= 3
+                    and stack[-1] == "Item"
+                    and stack[-2] == "DisplayBoard"
+                    and stack[-3] == "DisplayBoards"
+                ):
+                    self._display_board_item_buf.append(dict(elem.attrib))
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                if (
+                    self._include_list_items
+                    and tag == "ListItem"
+                    and len(stack) >= 3
+                    and stack[-2] == "ListItems"
+                    and stack[-3] == "FinalDraft"
+                ):
+                    item: dict[str, Any] = {"attrs": dict(elem.attrib)}
+                    if self._list_item_buf["subordinates"]:
+                        item["subordinate_to"] = [
+                            dict(x)
+                            for x in self._list_item_buf["subordinates"]
+                        ]
+                    if self._list_item_buf["paragraphs"]:
+                        item["content_paragraphs"] = self._list_item_buf[
+                            "paragraphs"
+                        ]
+                    screenplay.list_items.append(item)
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                if (
+                    self._include_list_items
+                    and tag == "SubordinateTo"
+                    and len(stack) >= 2
+                    and stack[-2] == "ListItem"
+                    and "ListItems" in stack
+                ):
+                    self._list_item_buf["subordinates"].append(
+                        dict(elem.attrib)
+                    )
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                if (
+                    self._include_list_items
+                    and tag == "Text"
+                    and len(stack) >= 5
+                    and stack[-1] == "Text"
+                    and stack[-2] == "Paragraph"
+                    and stack[-3] == "Content"
+                    and stack[-4] == "ListItem"
+                    and stack[-5] == "ListItems"
+                ):
+                    self._list_item_text_parts.append(elem.text or "")
+                    elem.clear()
+                    stack.pop()
+                    continue
+
+                if (
+                    self._include_list_items
+                    and tag == "Paragraph"
+                    and len(stack) >= 4
+                    and stack[-1] == "Paragraph"
+                    and stack[-2] == "Content"
+                    and stack[-3] == "ListItem"
+                    and stack[-4] == "ListItems"
+                ):
+                    raw = "".join(self._list_item_text_parts).strip()
+                    self._list_item_text_parts = []
+                    para = ParagraphInfo(
+                        type=elem.attrib.get("Type", "Unknown"),
+                        raw_text=raw,
+                        runs=[],
+                        attrs=dict(elem.attrib),
+                        scene_properties={},
+                        script_notes=[],
+                        alts=None,
+                    )
+                    self._list_item_buf["paragraphs"].append(asdict(para))
                     elem.clear()
                     stack.pop()
                     continue

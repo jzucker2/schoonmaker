@@ -94,6 +94,9 @@ def compute_screenplay_metadata(screenplay: Screenplay) -> dict[str, Any]:
     dialogue_line, transition, etc.), characters per scene, lines per scene
     per character, and aggregate counts. Only generated when CLI --metadata
     is passed.
+
+    Totals reflect screenplay body only (``preamble`` + ``scenes``). Optional
+    ``list_items`` and ``display_boards`` are ignored here on purpose.
     """
     elements_by_type: dict[str, int] = {
         "action": 0,

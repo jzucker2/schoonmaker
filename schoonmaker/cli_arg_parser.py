@@ -10,8 +10,8 @@ class CLIArgParser(object):
         self.parser = ArgumentParser(
             prog="schoonmaker",
             description=(
-                "Parse FDX; export JSON AST or Fountain; "
-                "diff parse JSON snapshots or changed .fdx in git (CI)."
+                "Parse FDX; export JSON AST or Fountain; diff parse JSON "
+                "or CI reports; Markdown for GitHub Actions Step Summary."
             ),
         )
         subparsers = self.parser.add_subparsers(dest="command", required=True)
@@ -56,6 +56,24 @@ class CLIArgParser(object):
             action="store_true",
             dest="file_info",
             help="Include source file path, size, and timestamps in JSON",
+        )
+        parse_parser.add_argument(
+            "--list-items",
+            action="store_true",
+            dest="list_items",
+            help=(
+                "Include Final Draft <ListItems> (beat/outline board) in "
+                "JSON; excluded from --metadata script totals"
+            ),
+        )
+        parse_parser.add_argument(
+            "--display-boards",
+            action="store_true",
+            dest="display_boards",
+            help=(
+                "Include Final Draft <DisplayBoards> (Story Map / Beat "
+                "layout) in JSON; excluded from --metadata script totals"
+            ),
         )
         parse_parser.set_defaults(command="parse")
 
@@ -133,7 +151,45 @@ class CLIArgParser(object):
             default="",
             help="Git repository root (default: current directory)",
         )
+        ci_parser.add_argument(
+            "--list-items",
+            action="store_true",
+            dest="list_items",
+            help=(
+                "Parse with --list-items (or set CI_FDX_LIST_ITEMS=1); "
+                "diff reports include list_items when non-empty"
+            ),
+        )
+        ci_parser.add_argument(
+            "--display-boards",
+            action="store_true",
+            dest="display_boards",
+            help=(
+                "Parse with --display-boards (or CI_FDX_DISPLAY_BOARDS=1); "
+                "diff includes display_boards when non-empty"
+            ),
+        )
         ci_parser.set_defaults(command="ci-fdx-diff")
+
+        report_md_parser = subparsers.add_parser(
+            "ci-report-md",
+            help=(
+                "Emit Markdown from ci-fdx-diff *-diff.json (GitHub Summary)"
+            ),
+        )
+        report_md_parser.add_argument(
+            "reports_dir",
+            nargs="?",
+            default=".",
+            help="Directory with *-diff.json and optional path-index.tsv",
+        )
+        report_md_parser.add_argument(
+            "-o",
+            "--output",
+            type=str,
+            help="Write Markdown here (default: stdout)",
+        )
+        report_md_parser.set_defaults(command="ci-report-md")
 
     def _parse_args(self) -> Namespace:
         return self.parser.parse_args()

@@ -130,7 +130,10 @@ def _compute_output_checksums(out: dict) -> dict[str, object]:
 
 
 def run_parse(args) -> int:
-    screenplay = FDXParser().parse(args.file)
+    screenplay = FDXParser(
+        include_list_items=getattr(args, "list_items", False),
+        include_display_boards=getattr(args, "display_boards", False),
+    ).parse(args.file)
     out = {
         "nonce": uuid.uuid4().hex,
         "parser_version": parser_version,
@@ -183,6 +186,10 @@ def main() -> int:
         from schoonmaker.ci_fdx_diff import main_ci_fdx_diff
 
         return main_ci_fdx_diff(args)
+    if args.command == "ci-report-md":
+        from schoonmaker.ci_report_md import main_ci_report_md
+
+        return main_ci_report_md(args)
 
     log.error("Unknown command: %s", args.command)
     return 2

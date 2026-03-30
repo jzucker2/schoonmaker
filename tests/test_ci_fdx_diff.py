@@ -82,8 +82,10 @@ def test_list_changed_fdx_paths_git_failure_raises(monkeypatch):
 def test_main_ci_fdx_diff_passes_repo(tmp_path, monkeypatch):
     captured: dict = {}
 
-    def fake_run(out, base, head, *, repo=None):
+    def fake_run(out, base, head, *, repo=None, **kwargs):
         captured["repo"] = repo
+        captured["list_items"] = kwargs.get("list_items", False)
+        captured["display_boards"] = kwargs.get("display_boards", False)
         return 0
 
     monkeypatch.setattr("schoonmaker.ci_fdx_diff.run_ci_fdx_diff", fake_run)
@@ -92,9 +94,45 @@ def test_main_ci_fdx_diff_passes_repo(tmp_path, monkeypatch):
         base_sha="a",
         head_sha="b",
         repo=str(tmp_path),
+        list_items=False,
+        display_boards=False,
     )
     assert main_ci_fdx_diff(args) == 0
     assert captured["repo"] == tmp_path.resolve()
+    assert captured["list_items"] is False
+    assert captured["display_boards"] is False
+
+
+def test_main_ci_fdx_diff_env_enables_board_extras(tmp_path, monkeypatch):
+    captured: dict = {}
+
+    def fake_run(
+        out,
+        base,
+        head,
+        *,
+        repo=None,
+        list_items=False,
+        display_boards=False,
+    ):
+        captured["list_items"] = list_items
+        captured["display_boards"] = display_boards
+        return 0
+
+    monkeypatch.setattr("schoonmaker.ci_fdx_diff.run_ci_fdx_diff", fake_run)
+    monkeypatch.setenv("CI_FDX_LIST_ITEMS", "1")
+    monkeypatch.setenv("CI_FDX_DISPLAY_BOARDS", "true")
+    args = SimpleNamespace(
+        output=str(tmp_path / "out"),
+        base_sha="a",
+        head_sha="b",
+        repo="",
+        list_items=False,
+        display_boards=False,
+    )
+    assert main_ci_fdx_diff(args) == 0
+    assert captured["list_items"] is True
+    assert captured["display_boards"] is True
 
 
 def test_run_ci_fdx_diff_skips_when_no_base(monkeypatch, tmp_path, capsys):

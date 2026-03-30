@@ -17,6 +17,7 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
   - **`source_file_info.py`** – `source_file_info(path)` for optional `parse --file-info` JSON (`path_resolved`, `size_bytes`, timestamps).
   - **`parse_json_diff.py`** – `build_diff_report`, `load_parse_json`, `scene_digests` for `schoonmaker diff`.
   - **`ci_fdx_diff.py`** – `run_ci_fdx_diff`, `resolve_base_sha`, etc. for `schoonmaker ci-fdx-diff` (git + parse + diff).
+  - **`ci_report_md.py`** – `markdown_from_ci_reports` for `schoonmaker ci-report-md` (GitHub Step Summary).
   - **`utils.py`** – Logging helpers; `strip_run_varying_ids` (shared checksum / diff normalization).
 - **`cli.py`** (repo root) – Thin shim calling `schoonmaker.cli:main` so **`python cli.py`** still works from a clone without installing.
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
@@ -63,6 +64,12 @@ schoonmaker parse -f path/to/script.fdx -o script.json --checksum
 # Include source file path, size, and timestamps in JSON
 schoonmaker parse -f path/to/script.fdx -o script.json --file-info
 
+# Include <ListItems> beat board in JSON (excluded from --metadata script totals)
+schoonmaker parse -f path/to/script.fdx -o script.json --list-items
+
+# Include <DisplayBoards> Story Map / Beat layout (excluded from --metadata totals)
+schoonmaker parse -f path/to/script.fdx -o script.json --display-boards
+
 # All optional parse flags together (metadata, checksums, source file stats)
 schoonmaker parse -f path/to/script.fdx -o script.json \
   --metadata --checksum --file-info
@@ -73,6 +80,12 @@ schoonmaker diff -b older.json -a newer.json -o report.json
 
 # Changed .fdx between two git commits (CI); optional env CI_FDX_BASE_SHA / CI_FDX_HEAD_SHA
 schoonmaker ci-fdx-diff -o fdx-reports --base-sha "$BASE" --head-sha "$HEAD"
+
+# Same with beat-board parse extras (or set CI_FDX_LIST_ITEMS / CI_FDX_DISPLAY_BOARDS)
+schoonmaker ci-fdx-diff -o fdx-reports --list-items --display-boards
+
+# Markdown summary of ci-fdx-diff output (append to GITHUB_STEP_SUMMARY in Actions)
+schoonmaker ci-report-md fdx-reports
 
 # Emit FDX → Fountain to stdout
 schoonmaker fountain -f path/to/script.fdx

@@ -125,4 +125,10 @@ class Screenplay:
     document_ref: list[dict[str, Any]] = field(default_factory=list)
     alt_collection: list[dict[str, Any]] = field(default_factory=list)
     target_script_length: Optional[str] = None
+    # Beat/outline <ListItems> if ``FDXParser(include_list_items=True)``;
+    # not screenplay body; omitted from metadata totals.
+    list_items: list[dict[str, Any]] = field(default_factory=list)
+    # <DisplayBoards> (Story Map / Beat layout) if
+    # ``FDXParser(include_display_boards=True)``; omitted from metadata totals.
+    display_boards: list[dict[str, Any]] = field(default_factory=list)
     meta: dict[str, Any] = field(default_factory=dict)
