@@ -1,0 +1,106 @@
+# Pushes to the default branch: diff .fdx files in this push (before → after).
+#
+# Copy with requirements-ci.txt (see examples/README.md).
+# For PR review, prefer github-actions-fdx-changes-pr.yml.
+#
+# github.event.before is all zeros for some new-branch pushes; we fall back to the parent of after.
+
+name: FDX changes (push to main)
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - '**/*.fdx'
+      - '**/*.FDX'
+
+jobs:
+  diff-fdx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install schoonmaker
+        run: pip install -r requirements-ci.txt
+
+      - name: Resolve SHAs (push payload)
+        id: shas
+        run: |
+          set -euo pipefail
+          ZERO=0000000000000000000000000000000000000000
+          AFTER="${{ github.event.after }}"
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$AFTER" ]; then
+            echo "Missing after SHA" >&2
+            exit 1
+          fi
+          if [ "$BEFORE" = "$ZERO" ] || [ -z "$BEFORE" ]; then
+            if git rev-parse --verify "${AFTER}^" >/dev/null 2>&1; then
+              echo "base=$(git rev-parse "${AFTER}^")" >> "$GITHUB_OUTPUT"
+            else
+              echo "base=" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "base=$BEFORE" >> "$GITHUB_OUTPUT"
+          fi
+          echo "head=$AFTER" >> "$GITHUB_OUTPUT"
+
+      - name: Parse and diff changed FDX files
+        env:
+          BASE_SHA: ${{ steps.shas.outputs.base }}
+          HEAD_SHA: ${{ steps.shas.outputs.head }}
+        run: |
+          set -euo pipefail
+          mkdir -p fdx-reports
+          : > fdx-reports/path-index.tsv
+          if [ -z "${HEAD_SHA:-}" ]; then
+            echo "HEAD_SHA unset" >&2
+            exit 1
+          fi
+          if [ -z "${BASE_SHA:-}" ]; then
+            echo "No base SHA to diff against; skip."
+            exit 0
+          fi
+          mapfile -t FILES < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- '*.fdx' '*.FDX' || true)
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "No .fdx files in this diff."
+            exit 0
+          fi
+          for f in "${FILES[@]}"; do
+            safe=$(printf '%s' "$f" | sha256sum | awk '{print $1}')
+            printf '%s\t%s\n' "$safe" "$f" >> fdx-reports/path-index.tsv
+            has_before=true
+            git show "$BASE_SHA:$f" > "/tmp/before_${safe}.fdx" 2>/dev/null || has_before=false
+            if ! git cat-file -e "$HEAD_SHA:$f" 2>/dev/null; then
+              echo "Deleted: $f" > "fdx-reports/${safe}-deleted.txt"
+              continue
+            fi
+            git show "$HEAD_SHA:$f" > "/tmp/after_${safe}.fdx"
+            if [ "$has_before" = true ]; then
+              schoonmaker parse -f "/tmp/before_${safe}.fdx" -o "/tmp/before_${safe}.json" \
+                --metadata --checksum
+              schoonmaker parse -f "/tmp/after_${safe}.fdx" -o "/tmp/after_${safe}.json" \
+                --metadata --checksum
+              schoonmaker diff --before "/tmp/before_${safe}.json" \
+                --after "/tmp/after_${safe}.json" \
+                -o "fdx-reports/${safe}-diff.json"
+            else
+              echo "New file: $f" > "fdx-reports/${safe}-new.txt"
+              schoonmaker parse -f "/tmp/after_${safe}.fdx" \
+                -o "fdx-reports/${safe}-parse.json" --metadata --checksum
+            fi
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fdx-analysis-push
+          path: fdx-reports/

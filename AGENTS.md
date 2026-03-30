@@ -20,6 +20,7 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
 - **`cli.py`** (repo root) – Thin shim calling `schoonmaker.cli:main` so **`python cli.py`** still works from a clone without installing.
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
+- **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-pr.yml`, `github-actions-fdx-changes-push.yml`; see `examples/README.md`).
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
 - **`requirements-dev.txt`** – `-e .` plus dev deps: black, flake8, pytest, pytest-cov, pre-commit, etc.
 - **`Makefile`** – `make test`, `make check`, `make format`, `make lint`, `make ci-check`.

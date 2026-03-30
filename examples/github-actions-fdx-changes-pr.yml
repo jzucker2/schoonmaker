@@ -1,46 +1,37 @@
-# Example: copy to ANOTHER repo as .github/workflows/fdx-changes.yml
+# Pull requests: diff each changed .fdx vs the PR base branch.
 #
-# - Pin schoonmaker: pip install "git+https://github.com/YOUR_ORG/schoonmaker.git@v1.0.1"
-# - Adjust on.pull_request.paths if your FDX files are only under e.g. scripts/
+# Copy with requirements-ci.txt (see examples/README.md).
+# For pushes to main, use github-actions-fdx-changes-push.yml.
 
-name: Analyze changed FDX
+name: FDX changes (pull request)
 
 on:
-  schedule:
-    - cron: '0 0 * * 0'  # Sunday at UTC midnight
-  push:
-    branches: [main, master]
-    paths:
-      - '**/*.fdx'
   pull_request:
-    branches: [main, master]
     paths:
       - '**/*.fdx'
+      - '**/*.FDX'
 
 jobs:
   diff-fdx:
     runs-on: ubuntu-latest
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
-      - name: Check out source repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: Set up Python environment
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-          cache: 'pip'
-          cache-dependency-path: '**/requirements-ci.txt'
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
 
       - name: Install schoonmaker
-        run: |
-          pip install -r requirements-ci.txt
+        run: pip install -r requirements-ci.txt
 
       - name: Parse and diff changed FDX files
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           mkdir -p fdx-reports
@@ -51,13 +42,12 @@ jobs:
             exit 0
           fi
           for f in "${FILES[@]}"; do
-            # Full-path SHA-256 avoids collisions from tr / → _ (e.g. scripts/a.fdx vs scripts_a.fdx)
             safe=$(printf '%s' "$f" | sha256sum | awk '{print $1}')
             printf '%s\t%s\n' "$safe" "$f" >> fdx-reports/path-index.tsv
             has_before=true
             git show "$BASE_SHA:$f" > "/tmp/before_${safe}.fdx" 2>/dev/null || has_before=false
             if ! git cat-file -e "$HEAD_SHA:$f" 2>/dev/null; then
-              echo "Deleted in PR: $f" > "fdx-reports/${safe}-deleted.txt"
+              echo "Deleted: $f" > "fdx-reports/${safe}-deleted.txt"
               continue
             fi
             git show "$HEAD_SHA:$f" > "/tmp/after_${safe}.fdx"
@@ -79,5 +69,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: fdx-analysis
+          name: fdx-analysis-pr
           path: fdx-reports/

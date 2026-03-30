@@ -84,13 +84,9 @@ docker compose build && docker compose run --rm schoonmaker
 
 ### Using this repo from another project (GitHub Actions)
 
-To **analyze any changed `.fdx` files** on pull requests (e.g. word/scene/character deltas vs the base branch):
+Typical flow: **`git diff`** the base and head SHAs for changed `*.fdx` paths, **`schoonmaker parse --metadata --checksum`** each side, then **`schoonmaker diff`**; upload JSON as **artifacts** or summarize with `jq`/Python.
 
-1. In the **other** repo, add a workflow that installs schoonmaker, lists changed FDX paths with `git diff` between `pull_request.base.sha` and `pull_request.head.sha`, and for each path checks out both sides with `git show <sha>:path`.
-2. Run **`schoonmaker parse --metadata --checksum`** on each side (or only on HEAD for new files), then **`schoonmaker diff --before before.json --after after.json`** for renames/modifications.
-3. Upload the JSON reports as **artifacts**, or post a summary to the PR with a small script (`jq` / Python).
-
-Copy **`examples/github-actions-analyze-fdx-changes.yml`** and **`examples/requirements-ci.txt`** into the other repo (workflow under `.github/workflows/`, requirements file at the repo root). Edit **`requirements-ci.txt`** to point at this project (**pin a tag or commit**, replace `YOUR_ORG`). The workflow runs **`pip install -r requirements-ci.txt`**. For private repos, use a [`pip` URL with a token](https://pip.pypa.io/en/stable/topics/authentication/) or vendor a wheel.
+Copy **`examples/requirements-ci.txt`** to the other repo root. Add **`examples/github-actions-fdx-changes-pr.yml`** to **`.github/workflows/`** for pull requests. Optionally add **`examples/github-actions-fdx-changes-push.yml`** for pushes to `main`. See **`examples/README.md`**. Edit **`requirements-ci.txt`** (**pin a tag or commit**, replace `YOUR_ORG`). For private repos, use a [`pip` URL with a token](https://pip.pypa.io/en/stable/topics/authentication/) or vendor a wheel.
 
 Parse JSON output always includes **`nonce`** (unique per run), **`parser_version`** (from `schoonmaker.version`), and **`parse_datetime`** (UTC ISO). With **`--checksum`**, a **`checksums`** object is added with SHA-256 hashes for `alt_collection`, `scenes`, `title_page`, and `preamble` (each is the hash of canonical JSON of that section after normalizing away run-varying IDs). **`scene_checksums`** is a parallel list of SHA-256 digests, one per scene in order, so a diff can show which scene indices changed without re-parsing the full `scenes` array. With **`--file-info`**, a **`source_file`** object records the input path (as given and resolved), basename, **`size_bytes`**, and UTC ISO **`modified`** / **`accessed`** times; **`created`** is included when the OS exposes it (e.g. Windows, macOS).
 
