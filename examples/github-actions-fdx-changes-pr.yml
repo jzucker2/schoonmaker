@@ -14,9 +14,6 @@ on:
 jobs:
   diff-fdx:
     runs-on: ubuntu-latest
-    env:
-      BASE_SHA: ${{ github.event.pull_request.base.sha }}
-      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -32,39 +29,10 @@ jobs:
         run: pip install -r requirements-ci.txt
 
       - name: Parse and diff changed FDX files
-        run: |
-          set -euo pipefail
-          mkdir -p fdx-reports
-          : > fdx-reports/path-index.tsv
-          mapfile -t FILES < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- '*.fdx' '*.FDX' || true)
-          if [ ${#FILES[@]} -eq 0 ]; then
-            echo "No .fdx files in this diff."
-            exit 0
-          fi
-          for f in "${FILES[@]}"; do
-            safe=$(printf '%s' "$f" | sha256sum | awk '{print $1}')
-            printf '%s\t%s\n' "$safe" "$f" >> fdx-reports/path-index.tsv
-            has_before=true
-            git show "$BASE_SHA:$f" > "/tmp/before_${safe}.fdx" 2>/dev/null || has_before=false
-            if ! git cat-file -e "$HEAD_SHA:$f" 2>/dev/null; then
-              echo "Deleted: $f" > "fdx-reports/${safe}-deleted.txt"
-              continue
-            fi
-            git show "$HEAD_SHA:$f" > "/tmp/after_${safe}.fdx"
-            if [ "$has_before" = true ]; then
-              schoonmaker parse -f "/tmp/before_${safe}.fdx" -o "/tmp/before_${safe}.json" \
-                --metadata --checksum
-              schoonmaker parse -f "/tmp/after_${safe}.fdx" -o "/tmp/after_${safe}.json" \
-                --metadata --checksum
-              schoonmaker diff --before "/tmp/before_${safe}.json" \
-                --after "/tmp/after_${safe}.json" \
-                -o "fdx-reports/${safe}-diff.json"
-            else
-              echo "New file: $f" > "fdx-reports/${safe}-new.txt"
-              schoonmaker parse -f "/tmp/after_${safe}.fdx" \
-                -o "fdx-reports/${safe}-parse.json" --metadata --checksum
-            fi
-          done
+        env:
+          CI_FDX_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          CI_FDX_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: schoonmaker ci-fdx-diff -o fdx-reports
 
       - uses: actions/upload-artifact@v4
         if: always()

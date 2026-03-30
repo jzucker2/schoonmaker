@@ -16,11 +16,12 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
   - **`metadata.py`** – `compute_screenplay_metadata(screenplay)` for scene/character/line stats (used when `parse --metadata`).
   - **`source_file_info.py`** – `source_file_info(path)` for optional `parse --file-info` JSON (`path_resolved`, `size_bytes`, timestamps).
   - **`parse_json_diff.py`** – `build_diff_report`, `load_parse_json`, `scene_digests` for `schoonmaker diff`.
+  - **`ci_fdx_diff.py`** – `run_ci_fdx_diff`, `resolve_base_sha`, etc. for `schoonmaker ci-fdx-diff` (git + parse + diff).
   - **`utils.py`** – Logging helpers; `strip_run_varying_ids` (shared checksum / diff normalization).
 - **`cli.py`** (repo root) – Thin shim calling `schoonmaker.cli:main` so **`python cli.py`** still works from a clone without installing.
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
-- **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-pr.yml`, `github-actions-fdx-changes-push.yml`; see `examples/README.md`).
+- **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-*.yml`), **`requirements-ci.txt`**, and **`examples/README.md`**. These should mirror how the tool is actually invoked (see Conventions).
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
 - **`requirements-dev.txt`** – `-e .` plus dev deps: black, flake8, pytest, pytest-cov, pre-commit, etc.
 - **`Makefile`** – `make test`, `make check`, `make format`, `make lint`, `make ci-check`.
@@ -68,6 +69,9 @@ schoonmaker parse -f path/to/script.fdx -o script.json \
 schoonmaker diff --before older.json --after newer.json
 schoonmaker diff -b older.json -a newer.json -o report.json
 
+# Changed .fdx between two git commits (CI); optional env CI_FDX_BASE_SHA / CI_FDX_HEAD_SHA
+schoonmaker ci-fdx-diff -o fdx-reports --base-sha "$BASE" --head-sha "$HEAD"
+
 # Emit FDX → Fountain to stdout
 schoonmaker fountain -f path/to/script.fdx
 
@@ -98,5 +102,6 @@ Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `
 - **Format and lint:** Black (`make format`) uses `--line-length=79` but does **not** shorten every long line (e.g. comments and docstrings are often left as-is). Flake8 E501 fails on **any** line over 79 characters. So after `make format`, run **`make lint`** (or `make check`); fix any E501 by shortening those lines (break or reword comments/docstrings) so both format and lint pass.
 - **When adding or changing behavior:**
   - Keep **README** and this **AGENTS.md** in sync; update README when CLI, layout, or usage changes.
+  - Keep **`examples/`** in sync with the **parser**, **CLI**, **`parse`/`diff` output**, **`ci-fdx-diff`**, and anything those workflows depend on (flags, env vars, artifact layout, install instructions). If you change how CI should call schoonmaker, update the YAML, **`examples/requirements-ci.txt`** when the install story changes, and **`examples/README.md`** so copied workflows stay accurate.
   - Add or update tests in **`tests/`** for new or modified behavior; for bug fixes, add or adjust tests when reasonable so the fix is covered.
   - Keep files at a **reasonable length**; split modules or extract helpers when a file grows large or a distinct responsibility appears, so the codebase stays navigable.

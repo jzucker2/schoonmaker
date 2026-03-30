@@ -70,6 +70,10 @@ schoonmaker diff --before script_v1.json --after script_v2.json -o diff.json
 
 # Same with short flags (-b = --before, -a = --after; stdout if you omit -o)
 schoonmaker diff -b old.json -a new.json
+
+# In CI: list changed .fdx between two SHAs, parse each side, write diff JSON under -o
+# (optional env CI_FDX_BASE_SHA / CI_FDX_HEAD_SHA if flags omitted)
+schoonmaker ci-fdx-diff -o fdx-reports --base-sha "$BASE" --head-sha "$HEAD"
 ```
 
 ## Docker
@@ -84,7 +88,7 @@ docker compose build && docker compose run --rm schoonmaker
 
 ### Using this repo from another project (GitHub Actions)
 
-Typical flow: **`git diff`** the base and head SHAs for changed `*.fdx` paths, **`schoonmaker parse --metadata --checksum`** each side, then **`schoonmaker diff`**; upload JSON as **artifacts** or summarize with `jq`/Python.
+Use **`schoonmaker ci-fdx-diff`** in the workflow (see **`examples/`**), or hand-roll: **`git diff`** the base and head SHAs for changed `*.fdx` paths, **`schoonmaker parse --metadata --checksum`** each side, then **`schoonmaker diff`**; upload JSON as **artifacts** or summarize with `jq`/Python.
 
 Copy **`examples/requirements-ci.txt`** to the other repo root. Add **`examples/github-actions-fdx-changes-pr.yml`** to **`.github/workflows/`** for pull requests. Optionally add **`examples/github-actions-fdx-changes-push.yml`** for pushes to `main`. See **`examples/README.md`**. Edit **`requirements-ci.txt`** (**pin a tag or commit**, replace `YOUR_ORG`). For private repos, use a [`pip` URL with a token](https://pip.pypa.io/en/stable/topics/authentication/) or vendor a wheel.
 

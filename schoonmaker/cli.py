@@ -179,6 +179,10 @@ def main() -> int:
         return run_fountain(args)
     if args.command == "diff":
         return run_diff(args)
+    if args.command == "ci-fdx-diff":
+        from schoonmaker.ci_fdx_diff import main_ci_fdx_diff
+
+        return main_ci_fdx_diff(args)
 
     log.error("Unknown command: %s", args.command)
     return 2

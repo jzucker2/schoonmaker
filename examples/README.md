@@ -4,8 +4,8 @@ Copy **`requirements-ci.txt`** to the root of your repo and set **org + tag** fo
 
 | File | When to use |
 |------|-------------|
-| **`github-actions-fdx-changes-pr.yml`** | **Pull requests** — `BASE_SHA` / `HEAD_SHA` from the PR (`env` only). |
-| **`github-actions-fdx-changes-push.yml`** | **Pushes to `main`/`master`** — `before` → `after` (with a step for empty `before`). |
+| **`github-actions-fdx-changes-pr.yml`** | **Pull requests** — sets `CI_FDX_BASE_SHA` / `CI_FDX_HEAD_SHA` from the PR, runs **`schoonmaker ci-fdx-diff`**. |
+| **`github-actions-fdx-changes-push.yml`** | **Pushes to `main`/`master`** — same command; push **`before`** may be all zeros; **`ci-fdx-diff`** resolves the parent of **`after`** in Python when needed. |
 
 Use one or both. For PR review, **`pr`** is usually enough; **`push`** is for post-merge analysis.
 
