@@ -32,6 +32,8 @@ jobs:
         env:
           CI_FDX_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           CI_FDX_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          # Optional: CI_FDX_LIST_ITEMS / CI_FDX_DISPLAY_BOARDS = 1, true, yes, on
+          # or add --list-items / --display-boards to the run command.
         run: schoonmaker ci-fdx-diff -o fdx-reports
 
       - uses: actions/upload-artifact@v4

@@ -54,6 +54,12 @@ schoonmaker parse -f path/to/script.fdx -o script.json --checksum
 # Include source file path, size, and filesystem timestamps in the JSON
 schoonmaker parse -f path/to/script.fdx -o script.json --file-info
 
+# Include Final Draft beat/outline <ListItems> in JSON (not counted in --metadata totals)
+schoonmaker parse -f path/to/script.fdx -o script.json --list-items
+
+# Include <DisplayBoards> (Story Map / Beat canvas layout); also excluded from --metadata totals
+schoonmaker parse -f path/to/script.fdx -o script.json --display-boards
+
 # All optional parse flags together (metadata, checksums, source file stats)
 schoonmaker parse -f path/to/script.fdx -o script.json \
   --metadata --checksum --file-info
@@ -94,6 +100,6 @@ Copy **`examples/requirements-ci.txt`** to the other repo root. Add **`examples/
 
 Parse JSON output always includes **`nonce`** (unique per run), **`parser_version`** (from `schoonmaker.version`), and **`parse_datetime`** (UTC ISO). With **`--checksum`**, a **`checksums`** object is added with SHA-256 hashes for `alt_collection`, `scenes`, `title_page`, and `preamble` (each is the hash of canonical JSON of that section after normalizing away run-varying IDs). **`scene_checksums`** is a parallel list of SHA-256 digests, one per scene in order, so a diff can show which scene indices changed without re-parsing the full `scenes` array. With **`--file-info`**, a **`source_file`** object records the input path (as given and resolved), basename, **`size_bytes`**, and UTC ISO **`modified`** / **`accessed`** times; **`created`** is included when the OS exposes it (e.g. Windows, macOS).
 
-The **`diff`** subcommand reads two parse JSON files and writes a report with **`scenes`** (counts, **`changed_indices`**, **`added_scene_indices`**, **`removed_scene_indices`**), **`counts`** (word and paragraph totals with before/after/delta), **`elements`** (action, dialogue lines, etc.), **`characters`** (new, removed, line/scene deltas), and **`locations`** (summary and per-location scene-count changes). Pass **`--metadata`** when generating both JSON files for full stats; scene-level changes are always derived from **`scenes`** using the same digest rules as parse checksums (stale **`scene_checksums`** in hand-edited JSON are not trusted).
+The **`diff`** subcommand reads two parse JSON files and writes a report with **`scenes`** (counts, **`changed_indices`**, **`added_scene_indices`**, **`removed_scene_indices`**), **`counts`** (word and paragraph totals with before/after/delta), **`elements`** (action, dialogue lines, etc.), **`characters`** (new, removed, line/scene deltas), and **`locations`** (summary and per-location scene-count changes). If either input includes non-empty **`list_items`** or **`display_boards`** (from **`parse --list-items`** / **`--display-boards`**), the report adds a short summary (**counts**, SHA-256 **digests**, **`changed`**). Pass **`--metadata`** when generating both JSON files for full stats; scene-level changes are always derived from **`scenes`** using the same digest rules as parse checksums (stale **`scene_checksums`** in hand-edited JSON are not trusted).
 
 See **AGENTS.md** for layout, conventions, and full command reference.

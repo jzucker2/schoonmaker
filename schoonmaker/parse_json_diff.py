@@ -113,6 +113,38 @@ def _meta_counts(meta: dict[str, Any] | None) -> dict[str, int]:
     return out
 
 
+def _extras_list(data: dict[str, Any], key: str) -> list[Any]:
+    v = data.get(key)
+    return v if isinstance(v, list) else []
+
+
+def _canonical_json_digest(obj: Any) -> str:
+    blob = json.dumps(obj, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
+
+
+def _append_board_extras_diff(
+    report: dict[str, Any],
+    a: dict[str, Any],
+    b: dict[str, Any],
+) -> None:
+    """Summarize optional ``list_items`` and ``display_boards`` sections."""
+    for key in ("list_items", "display_boards"):
+        la = _extras_list(a, key)
+        lb = _extras_list(b, key)
+        if not la and not lb:
+            continue
+        da = _canonical_json_digest(la)
+        db = _canonical_json_digest(lb)
+        report[key] = {
+            "count_before": len(la),
+            "count_after": len(lb),
+            "digest_before": da,
+            "digest_after": db,
+            "changed": da != db,
+        }
+
+
 def _location_list_to_map(rows: object) -> dict[str, int]:
     if not isinstance(rows, list):
         return {}
@@ -155,6 +187,10 @@ def build_diff_report(
     Prefer parse output with ``--metadata`` for full word, character, and
     location stats. ``--checksum`` avoids recomputing per-scene digests when
     lists match scene count.
+
+    If either parse JSON includes non-empty ``list_items`` or
+    ``display_boards`` (from ``parse --list-items`` / ``--display-boards``),
+    the report adds a short summary (counts, SHA-256 digests, ``changed``).
     """
     warnings: list[str] = []
     scenes_a = a.get("scenes")
@@ -374,6 +410,8 @@ def build_diff_report(
             "summary": {},
             "by_bucket": [],
         }
+
+    _append_board_extras_diff(report, a, b)
 
     return report
 

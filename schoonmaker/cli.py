@@ -130,7 +130,10 @@ def _compute_output_checksums(out: dict) -> dict[str, object]:
 
 
 def run_parse(args) -> int:
-    screenplay = FDXParser().parse(args.file)
+    screenplay = FDXParser(
+        include_list_items=getattr(args, "list_items", False),
+        include_display_boards=getattr(args, "display_boards", False),
+    ).parse(args.file)
     out = {
         "nonce": uuid.uuid4().hex,
         "parser_version": parser_version,

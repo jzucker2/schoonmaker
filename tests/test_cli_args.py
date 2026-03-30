@@ -31,6 +31,20 @@ class TestCLIArgs(unittest.TestCase):
         self.assertEqual(args.command, "parse")
         self.assertTrue(args.file_info)
 
+    def test_parse_list_items_flag(self):
+        args = CLIArgParser().parser.parse_args(
+            ["parse", "-f", "x.fdx", "--list-items"]
+        )
+        self.assertEqual(args.command, "parse")
+        self.assertTrue(args.list_items)
+
+    def test_parse_display_boards_flag(self):
+        args = CLIArgParser().parser.parse_args(
+            ["parse", "-f", "x.fdx", "--display-boards"]
+        )
+        self.assertEqual(args.command, "parse")
+        self.assertTrue(args.display_boards)
+
     def test_parse_metadata_checksum_file_info_flags_together(self):
         args = CLIArgParser().parser.parse_args(
             [
@@ -73,6 +87,20 @@ class TestCLIArgs(unittest.TestCase):
         self.assertEqual(args.output, "reports")
         self.assertEqual(args.base_sha, "aaa")
         self.assertEqual(args.head_sha, "bbb")
+
+    def test_ci_fdx_diff_list_items_and_display_boards_flags(self):
+        args = CLIArgParser().parser.parse_args(
+            [
+                "ci-fdx-diff",
+                "-o",
+                "r",
+                "--list-items",
+                "--display-boards",
+            ]
+        )
+        self.assertEqual(args.command, "ci-fdx-diff")
+        self.assertTrue(args.list_items)
+        self.assertTrue(args.display_boards)
 
 
 def test_python_m_schoonmaker_run_help():

@@ -28,6 +28,8 @@ def _run_parse_json(out_path, fdx_path, **flags):
             "metadata": flags.get("metadata", False),
             "checksum": flags.get("checksum", False),
             "file_info": flags.get("file_info", False),
+            "list_items": flags.get("list_items", False),
+            "display_boards": flags.get("display_boards", False),
         },
     )()
     run_parse(a)
@@ -149,6 +151,39 @@ def test_cli_diff_subprocess(sample_fdx_path, tmp_path):
     report = json.loads(out.read_text(encoding="utf-8"))
     assert report["diff_version"] == 1
     assert report["scenes"]["changed_indices"] == []
+
+
+def test_diff_report_includes_board_extras_when_present(
+    sample_fdx12_path,
+    tmp_path,
+):
+    ja = tmp_path / "a.json"
+    jb = tmp_path / "b.json"
+    _run_parse_json(
+        ja,
+        sample_fdx12_path,
+        metadata=True,
+        checksum=True,
+        list_items=True,
+        display_boards=True,
+    )
+    _run_parse_json(
+        jb,
+        sample_fdx12_path,
+        metadata=True,
+        checksum=True,
+        list_items=True,
+        display_boards=True,
+    )
+    ra = load_parse_json(ja)
+    rb = load_parse_json(jb)
+    report = build_diff_report(ra, rb)
+    assert "list_items" in report
+    assert report["list_items"]["count_before"] > 0
+    assert report["list_items"]["changed"] is False
+    assert "display_boards" in report
+    assert report["display_boards"]["count_before"] == 2
+    assert report["display_boards"]["changed"] is False
 
 
 def test_scene_digests_ignore_removed_checksums(sample_fdx_path, tmp_path):

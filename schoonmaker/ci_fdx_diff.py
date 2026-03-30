@@ -19,6 +19,11 @@ from types import SimpleNamespace
 _GIT_NULL_SHA = "0" * 40
 
 
+def _env_truthy(name: str) -> bool:
+    v = (os.environ.get(name) or "").strip().lower()
+    return v in ("1", "true", "yes", "on")
+
+
 def path_fingerprint(repo_relative_path: str) -> str:
     """Stable hex id for a repo path (like diff report artifact names)."""
     return hashlib.sha256(repo_relative_path.encode("utf-8")).hexdigest()
@@ -97,6 +102,8 @@ def run_ci_fdx_diff(
     head_sha: str,
     *,
     repo: Path | None = None,
+    list_items: bool = False,
+    display_boards: bool = False,
 ) -> int:
     """
     For each changed .fdx between base and head: parse both, write diff JSON.
@@ -142,6 +149,8 @@ def run_ci_fdx_diff(
             cwd,
             output_dir,
             tmp_root,
+            list_items=list_items,
+            display_boards=display_boards,
         )
     finally:
         if tmp_root.exists():
@@ -155,8 +164,23 @@ def _run_ci_fdx_diff_loop(
     cwd: Path | None,
     output_dir: Path,
     tmp_root: Path,
+    *,
+    list_items: bool = False,
+    display_boards: bool = False,
 ) -> int:
     from schoonmaker.cli import run_diff, run_parse
+
+    def _parse_ns(fdx: Path, json_out: Path) -> SimpleNamespace:
+        return SimpleNamespace(
+            command="parse",
+            file=str(fdx),
+            output=str(json_out),
+            metadata=True,
+            checksum=True,
+            file_info=False,
+            list_items=list_items,
+            display_boards=display_boards,
+        )
 
     index_path = output_dir / "path-index.tsv"
     for rel in paths:
@@ -196,28 +220,10 @@ def _run_ci_fdx_diff_loop(
         diff_out = output_dir / f"{safe}-diff.json"
 
         if has_before:
-            rc = run_parse(
-                SimpleNamespace(
-                    command="parse",
-                    file=str(before_fdx),
-                    output=str(before_json),
-                    metadata=True,
-                    checksum=True,
-                    file_info=False,
-                )
-            )
+            rc = run_parse(_parse_ns(before_fdx, before_json))
             if rc != 0:
                 return rc
-            rc = run_parse(
-                SimpleNamespace(
-                    command="parse",
-                    file=str(after_fdx),
-                    output=str(after_json),
-                    metadata=True,
-                    checksum=True,
-                    file_info=False,
-                )
-            )
+            rc = run_parse(_parse_ns(after_fdx, after_json))
             if rc != 0:
                 return rc
             rc = run_diff(
@@ -234,16 +240,7 @@ def _run_ci_fdx_diff_loop(
             new_note = output_dir / f"{safe}-new.txt"
             new_note.write_text(f"New file: {rel}\n", encoding="utf-8")
             parse_only = output_dir / f"{safe}-parse.json"
-            rc = run_parse(
-                SimpleNamespace(
-                    command="parse",
-                    file=str(after_fdx),
-                    output=str(parse_only),
-                    metadata=True,
-                    checksum=True,
-                    file_info=False,
-                )
-            )
+            rc = run_parse(_parse_ns(after_fdx, parse_only))
             if rc != 0:
                 return rc
 
@@ -263,4 +260,17 @@ def main_ci_fdx_diff(args: SimpleNamespace) -> int:
     repo = None
     if repo_arg is not None and str(repo_arg).strip():
         repo = Path(str(repo_arg)).resolve()
-    return run_ci_fdx_diff(out, base, head, repo=repo)
+    list_items = bool(getattr(args, "list_items", False)) or _env_truthy(
+        "CI_FDX_LIST_ITEMS"
+    )
+    display_boards = bool(
+        getattr(args, "display_boards", False)
+    ) or _env_truthy("CI_FDX_DISPLAY_BOARDS")
+    return run_ci_fdx_diff(
+        out,
+        base,
+        head,
+        repo=repo,
+        list_items=list_items,
+        display_boards=display_boards,
+    )

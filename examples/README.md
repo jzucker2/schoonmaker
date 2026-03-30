@@ -9,4 +9,6 @@ Copy **`requirements-ci.txt`** to the root of your repo and set **org + tag** fo
 
 Use one or both. For PR review, **`pr`** is usually enough; **`push`** is for post-merge analysis.
 
+**Beat board in CI:** To include `<ListItems>` / `<DisplayBoards>` in the artifact JSON and in each `*-diff.json` summary, set **`CI_FDX_LIST_ITEMS`** / **`CI_FDX_DISPLAY_BOARDS`** to **`1`**, **`true`**, **`yes`**, or **`on`**, and/or pass **`--list-items`** / **`--display-boards`** on **`ci-fdx-diff`**. CLI and env are OR’d (either enables the option).
+
 There is no cron example in the repo: add your own if you need it.

@@ -63,6 +63,12 @@ schoonmaker parse -f path/to/script.fdx -o script.json --checksum
 # Include source file path, size, and timestamps in JSON
 schoonmaker parse -f path/to/script.fdx -o script.json --file-info
 
+# Include <ListItems> beat board in JSON (excluded from --metadata script totals)
+schoonmaker parse -f path/to/script.fdx -o script.json --list-items
+
+# Include <DisplayBoards> Story Map / Beat layout (excluded from --metadata totals)
+schoonmaker parse -f path/to/script.fdx -o script.json --display-boards
+
 # All optional parse flags together (metadata, checksums, source file stats)
 schoonmaker parse -f path/to/script.fdx -o script.json \
   --metadata --checksum --file-info
@@ -73,6 +79,9 @@ schoonmaker diff -b older.json -a newer.json -o report.json
 
 # Changed .fdx between two git commits (CI); optional env CI_FDX_BASE_SHA / CI_FDX_HEAD_SHA
 schoonmaker ci-fdx-diff -o fdx-reports --base-sha "$BASE" --head-sha "$HEAD"
+
+# Same with beat-board parse extras (or set CI_FDX_LIST_ITEMS / CI_FDX_DISPLAY_BOARDS)
+schoonmaker ci-fdx-diff -o fdx-reports --list-items --display-boards
 
 # Emit FDX → Fountain to stdout
 schoonmaker fountain -f path/to/script.fdx
