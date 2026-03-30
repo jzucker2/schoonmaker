@@ -1,0 +1,5 @@
+# CI-only deps for FDX analysis workflows. Copy this file to your repo root
+# (next to .github/) and pin org + tag or commit.
+#
+# Replace YOUR_ORG and the ref after @ (use a tag or SHA, not a moving branch).
+git+https://github.com/YOUR_ORG/schoonmaker.git@v1.0.1

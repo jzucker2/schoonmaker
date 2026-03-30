@@ -1,6 +1,8 @@
-# Example: copy to ANOTHER repo as .github/workflows/fdx-changes.yml
+# Example: copy to ANOTHER repo:
+#   - .github/workflows/fdx-changes.yml  (this file)
+#   - requirements-ci.txt  (from examples/requirements-ci.txt in schoonmaker)
 #
-# - Pin schoonmaker: pip install "git+https://github.com/YOUR_ORG/schoonmaker.git@v1.0.1"
+# - Edit requirements-ci.txt: YOUR_ORG and pin @v1.0.1 (or a commit SHA)
 # - Adjust on.pull_request.paths if your FDX files are only under e.g. scripts/
 
 name: Analyze changed FDX
@@ -24,8 +26,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install schoonmaker
-        run: |
-          pip install "git+https://github.com/YOUR_ORG/schoonmaker.git@main"
+        run: pip install -r requirements-ci.txt
 
       - name: Parse and diff changed FDX files
         env:
