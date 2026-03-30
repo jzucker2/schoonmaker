@@ -186,6 +186,10 @@ def main() -> int:
         from schoonmaker.ci_fdx_diff import main_ci_fdx_diff
 
         return main_ci_fdx_diff(args)
+    if args.command == "ci-report-md":
+        from schoonmaker.ci_report_md import main_ci_report_md
+
+        return main_ci_report_md(args)
 
     log.error("Unknown command: %s", args.command)
     return 2

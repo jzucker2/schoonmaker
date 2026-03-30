@@ -10,8 +10,8 @@ class CLIArgParser(object):
         self.parser = ArgumentParser(
             prog="schoonmaker",
             description=(
-                "Parse FDX; export JSON AST or Fountain; "
-                "diff parse JSON snapshots or changed .fdx in git (CI)."
+                "Parse FDX; export JSON AST or Fountain; diff parse JSON "
+                "or CI reports; Markdown for GitHub Actions Step Summary."
             ),
         )
         subparsers = self.parser.add_subparsers(dest="command", required=True)
@@ -170,6 +170,26 @@ class CLIArgParser(object):
             ),
         )
         ci_parser.set_defaults(command="ci-fdx-diff")
+
+        report_md_parser = subparsers.add_parser(
+            "ci-report-md",
+            help=(
+                "Emit Markdown from ci-fdx-diff *-diff.json (GitHub Summary)"
+            ),
+        )
+        report_md_parser.add_argument(
+            "reports_dir",
+            nargs="?",
+            default=".",
+            help="Directory with *-diff.json and optional path-index.tsv",
+        )
+        report_md_parser.add_argument(
+            "-o",
+            "--output",
+            type=str,
+            help="Write Markdown here (default: stdout)",
+        )
+        report_md_parser.set_defaults(command="ci-report-md")
 
     def _parse_args(self) -> Namespace:
         return self.parser.parse_args()

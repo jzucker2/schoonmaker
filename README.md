@@ -94,7 +94,7 @@ docker compose build && docker compose run --rm schoonmaker
 
 ### Using this repo from another project (GitHub Actions)
 
-Use **`schoonmaker ci-fdx-diff`** in the workflow (see **`examples/`**), or hand-roll: **`git diff`** the base and head SHAs for changed `*.fdx` paths, **`schoonmaker parse --metadata --checksum`** each side, then **`schoonmaker diff`**; upload JSON as **artifacts** or summarize with `jq`/Python.
+Use **`schoonmaker ci-fdx-diff`** in the workflow (see **`examples/`**), or hand-roll: **`git diff`** the base and head SHAs for changed `*.fdx` paths, **`schoonmaker parse --metadata --checksum`** each side, then **`schoonmaker diff`**; upload JSON as **artifacts**. Append **`schoonmaker ci-report-md fdx-reports >> "$GITHUB_STEP_SUMMARY"`** so the workflow run shows a Markdown summary (scene/word deltas per file) on GitHub.
 
 Copy **`examples/requirements-ci.txt`** to the other repo root. Add **`examples/github-actions-fdx-changes-pr.yml`** to **`.github/workflows/`** for pull requests. Optionally add **`examples/github-actions-fdx-changes-push.yml`** for pushes to `main`. See **`examples/README.md`**. Edit **`requirements-ci.txt`** (**pin a tag or commit**, replace `YOUR_ORG`). For private repos, use a [`pip` URL with a token](https://pip.pypa.io/en/stable/topics/authentication/) or vendor a wheel.
 

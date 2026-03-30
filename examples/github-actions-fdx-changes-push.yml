@@ -40,6 +40,10 @@ jobs:
           # or add --list-items / --display-boards to the run command.
         run: schoonmaker ci-fdx-diff -o fdx-reports
 
+      - name: Add FDX report to GitHub job summary
+        if: always()
+        run: schoonmaker ci-report-md fdx-reports >> "$GITHUB_STEP_SUMMARY"
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
