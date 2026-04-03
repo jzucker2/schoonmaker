@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import shutil
 import subprocess
 import sys
@@ -212,6 +213,77 @@ def test_run_ci_fdx_diff_git_integration(sample_fdx_path, tmp_path):
     safe = path_fingerprint("script.fdx")
     assert (out / f"{safe}-diff.json").is_file()
     assert "_tmp" not in [p.name for p in out.iterdir()]
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git not installed")
+def test_run_ci_fdx_diff_new_file_diff_json(sample_fdx_path, tmp_path):
+    """New .fdx: diff vs empty baseline; every scene is an add."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "README").write_text("init\n", encoding="utf-8")
+    try:
+        subprocess.run(
+            ["git", "init"],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+        )
+    except subprocess.CalledProcessError as e:
+        err = (e.stderr or b"") + (e.stdout or b"")
+        pytest.skip(f"git init unavailable: {err!r}")
+    subprocess.run(
+        ["git", "config", "user.email", "t@e.co"],
+        cwd=repo,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "T"],
+        cwd=repo,
+        check=True,
+    )
+    subprocess.run(["git", "add", "README"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "commit", "-m", "first"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+    r = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    base_sha = r.stdout.strip()
+
+    shutil.copy(sample_fdx_path, repo / "new.fdx")
+    subprocess.run(["git", "add", "new.fdx"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "commit", "-m", "add fdx"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+    r2 = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    head_sha = r2.stdout.strip()
+
+    out = tmp_path / "reports_new"
+    rc = run_ci_fdx_diff(out, base_sha, head_sha, repo=repo)
+    assert rc == 0
+    safe = path_fingerprint("new.fdx")
+    assert (out / f"{safe}-diff.json").is_file()
+    assert (out / f"{safe}-parse.json").is_file()
+    data = json.loads((out / f"{safe}-diff.json").read_text(encoding="utf-8"))
+    assert data["scenes"]["count_before"] == 0
+    assert data["scenes"]["added_count"] == data["scenes"]["count_after"]
+    assert data["scenes"]["count_after"] > 0
 
 
 def test_cli_ci_fdx_diff_help():

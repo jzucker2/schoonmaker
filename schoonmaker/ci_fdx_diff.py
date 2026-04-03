@@ -7,12 +7,16 @@ Used by ``schoonmaker ci-fdx-diff``; orchestration lives here for unit tests.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
+from uuid import uuid4
 
 
 # git push event uses this when there is no parent (new branch, etc.)
@@ -27,6 +31,24 @@ def _env_truthy(name: str) -> bool:
 def path_fingerprint(repo_relative_path: str) -> str:
     """Stable hex id for a repo path (like diff report artifact names)."""
     return hashlib.sha256(repo_relative_path.encode("utf-8")).hexdigest()
+
+
+def _empty_baseline_parse_document() -> dict[str, Any]:
+    """
+    Minimal parse JSON compatible with ``build_diff_report`` (empty script).
+
+    Used when a .fdx did not exist at the base commit so the diff report can
+    treat the whole screenplay as added (same shape as ``schoonmaker parse``).
+    """
+    from schoonmaker.version import version as parser_version
+
+    return {
+        "nonce": uuid4().hex,
+        "parser_version": parser_version,
+        "parse_datetime": datetime.now(timezone.utc).isoformat(),
+        "scenes": [],
+        "metadata": {},
+    }
 
 
 def _git(
@@ -106,7 +128,8 @@ def run_ci_fdx_diff(
     display_boards: bool = False,
 ) -> int:
     """
-    For each changed .fdx between base and head: parse both, write diff JSON.
+    For each changed .fdx between base and head: parse head and baseline,
+    write ``*-diff.json`` (baseline is empty JSON when the file is new).
 
     Returns 0 on success, 1 on error, or 0 if skipped (no head or no base).
     """
@@ -223,26 +246,34 @@ def _run_ci_fdx_diff_loop(
             rc = run_parse(_parse_ns(before_fdx, before_json))
             if rc != 0:
                 return rc
-            rc = run_parse(_parse_ns(after_fdx, after_json))
-            if rc != 0:
-                return rc
-            rc = run_diff(
-                SimpleNamespace(
-                    command="diff",
-                    before=str(before_json),
-                    after=str(after_json),
-                    output=str(diff_out),
-                )
-            )
-            if rc != 0:
-                return rc
         else:
-            new_note = output_dir / f"{safe}-new.txt"
-            new_note.write_text(f"New file: {rel}\n", encoding="utf-8")
-            parse_only = output_dir / f"{safe}-parse.json"
-            rc = run_parse(_parse_ns(after_fdx, parse_only))
-            if rc != 0:
-                return rc
+            before_json.write_text(
+                json.dumps(
+                    _empty_baseline_parse_document(),
+                    indent=2,
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+        rc = run_parse(_parse_ns(after_fdx, after_json))
+        if rc != 0:
+            return rc
+        rc = run_diff(
+            SimpleNamespace(
+                command="diff",
+                before=str(before_json),
+                after=str(after_json),
+                output=str(diff_out),
+            )
+        )
+        if rc != 0:
+            return rc
+
+        if not has_before:
+            parse_copy = output_dir / f"{safe}-parse.json"
+            shutil.copy2(after_json, parse_copy)
 
     return 0
 
