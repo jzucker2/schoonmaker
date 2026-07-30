@@ -11,7 +11,8 @@ class CLIArgParser(object):
             prog="schoonmaker",
             description=(
                 "Parse FDX; export JSON AST or Fountain; diff parse JSON "
-                "or CI reports; Markdown for GitHub Actions Step Summary."
+                "or CI reports; Markdown for GitHub Actions; patch release "
+                "helpers (next-semver, ci-select-pr, ci-release-notes)."
             ),
         )
         subparsers = self.parser.add_subparsers(dest="command", required=True)
@@ -190,6 +191,186 @@ class CLIArgParser(object):
             help="Write Markdown here (default: stdout)",
         )
         report_md_parser.set_defaults(command="ci-report-md")
+
+        release_notes_parser = subparsers.add_parser(
+            "ci-release-notes",
+            help=("Compose release / PR Markdown from ci-fdx-diff reports"),
+        )
+        release_notes_parser.add_argument(
+            "reports_dir",
+            nargs="?",
+            default=".",
+            help="Directory with *-diff.json (default: .)",
+        )
+        release_notes_parser.add_argument(
+            "--version",
+            type=str,
+            required=True,
+            help="Release version string (e.g. v1.2.4)",
+        )
+        release_notes_parser.add_argument(
+            "--pr",
+            type=int,
+            dest="pr_number",
+            help="Merged pull request number",
+        )
+        release_notes_parser.add_argument(
+            "--pr-title",
+            type=str,
+            dest="pr_title",
+            help="Pull request title for the header",
+        )
+        release_notes_parser.add_argument(
+            "--pr-url",
+            type=str,
+            dest="pr_url",
+            help="Pull request URL for the header link",
+        )
+        release_notes_parser.add_argument(
+            "--intro",
+            type=str,
+            help="Optional intro paragraph under the release heading",
+        )
+        release_notes_parser.add_argument(
+            "-o",
+            "--output",
+            type=str,
+            help="Write Markdown here (default: stdout)",
+        )
+        release_notes_parser.set_defaults(command="ci-release-notes")
+
+        select_pr_parser = subparsers.add_parser(
+            "ci-select-pr",
+            help=("Read gh pr list JSON from stdin; require exactly one PR"),
+        )
+        select_pr_parser.add_argument(
+            "--label",
+            type=str,
+            default="",
+            help="Label name for error messages (filter via gh)",
+        )
+        select_pr_parser.add_argument(
+            "--allow-empty",
+            action="store_true",
+            dest="allow_empty",
+            help="Exit 0 when no PRs (for CI skip); still fail if many",
+        )
+        select_pr_parser.add_argument(
+            "--actions-output",
+            action="store_true",
+            dest="actions_output",
+            help="Append skip/pr fields to $GITHUB_OUTPUT",
+        )
+        select_pr_parser.add_argument(
+            "--json-out",
+            type=str,
+            default="",
+            dest="json_out",
+            help="Write selected PR JSON to this path",
+        )
+        select_pr_parser.set_defaults(command="ci-select-pr")
+
+        daily_parser = subparsers.add_parser(
+            "ci-daily-release",
+            help=(
+                "Merge one labeled PR, cut patch GitHub Release, FDX report"
+            ),
+        )
+        daily_parser.add_argument(
+            "--label",
+            type=str,
+            default="",
+            help=(
+                "PR label to ship (default: release-ready or RELEASE_LABEL)"
+            ),
+        )
+        daily_parser.add_argument(
+            "--default-branch",
+            type=str,
+            default="",
+            dest="default_branch",
+            help=(
+                "Branch to merge into (default: master or DEFAULT_BRANCH; "
+                "use main if that is your default)"
+            ),
+        )
+        daily_parser.add_argument(
+            "--reports-dir",
+            type=str,
+            default="fdx-reports",
+            dest="reports_dir",
+            help="Output directory for ci-fdx-diff (default: fdx-reports)",
+        )
+        daily_parser.add_argument(
+            "--notes-file",
+            type=str,
+            default="RELEASE_NOTES.md",
+            dest="notes_file",
+            help="Release notes Markdown path (default: RELEASE_NOTES.md)",
+        )
+        daily_parser.add_argument(
+            "--merge-method",
+            type=str,
+            default="squash",
+            dest="merge_method",
+            choices=("squash", "merge", "rebase"),
+            help="gh pr merge style (default: squash)",
+        )
+        daily_parser.add_argument(
+            "--repo",
+            type=str,
+            default="",
+            help="Git repository root (default: current directory)",
+        )
+        daily_parser.add_argument(
+            "--no-actions-output",
+            action="store_true",
+            dest="no_actions_output",
+            help="Do not write skip/tag fields to $GITHUB_OUTPUT",
+        )
+        daily_parser.add_argument(
+            "--no-step-summary",
+            action="store_true",
+            dest="no_step_summary",
+            help="Do not append to $GITHUB_STEP_SUMMARY",
+        )
+        daily_parser.set_defaults(command="ci-daily-release")
+
+        next_semver_parser = subparsers.add_parser(
+            "next-semver",
+            help="Print next patch semver (or latest tag)",
+        )
+        next_semver_parser.add_argument(
+            "version",
+            nargs="?",
+            default=None,
+            help="Version to bump (e.g. 1.2.3 or v1.2.3)",
+        )
+        next_semver_parser.add_argument(
+            "--from-tags",
+            action="store_true",
+            dest="from_tags",
+            help="Bump after latest semver git tag",
+        )
+        next_semver_parser.add_argument(
+            "--latest-tag",
+            action="store_true",
+            dest="latest_tag",
+            help="Print latest semver git tag (no bump)",
+        )
+        next_semver_parser.add_argument(
+            "--default",
+            type=str,
+            default="v0.0.0",
+            help="Baseline when --from-tags finds no tags (default v0.0.0)",
+        )
+        next_semver_parser.add_argument(
+            "--repo",
+            type=str,
+            default="",
+            help="Git repository root (default: current directory)",
+        )
+        next_semver_parser.set_defaults(command="next-semver")
 
     def _parse_args(self) -> Namespace:
         return self.parser.parse_args()

@@ -102,6 +102,37 @@ class TestCLIArgs(unittest.TestCase):
         self.assertTrue(args.list_items)
         self.assertTrue(args.display_boards)
 
+    def test_next_semver_from_tags_flag(self):
+        args = CLIArgParser().parser.parse_args(
+            ["next-semver", "--from-tags", "--default", "v1.0.0"]
+        )
+        self.assertEqual(args.command, "next-semver")
+        self.assertTrue(args.from_tags)
+        self.assertEqual(args.default, "v1.0.0")
+
+    def test_ci_release_notes_version_and_pr(self):
+        args = CLIArgParser().parser.parse_args(
+            [
+                "ci-release-notes",
+                "fdx-reports",
+                "--version",
+                "v1.2.4",
+                "--pr",
+                "9",
+            ]
+        )
+        self.assertEqual(args.command, "ci-release-notes")
+        self.assertEqual(args.reports_dir, "fdx-reports")
+        self.assertEqual(args.version, "v1.2.4")
+        self.assertEqual(args.pr_number, 9)
+
+    def test_ci_select_pr_label(self):
+        args = CLIArgParser().parser.parse_args(
+            ["ci-select-pr", "--label", "release-ready"]
+        )
+        self.assertEqual(args.command, "ci-select-pr")
+        self.assertEqual(args.label, "release-ready")
+
 
 def test_python_m_schoonmaker_run_help():
     """``python -m schoonmaker`` works from the repo (package layout + __main__)."""  # noqa: E501

@@ -1,0 +1,89 @@
+# Daily auto-release for screenplay repos that use schoonmaker.
+#
+# Copy ONLY:
+#   examples/github-actions-fdx-daily-release.yml → .github/workflows/
+#   examples/requirements-ci.txt → requirements-ci.txt (pin org + tag)
+#
+# After pip install, the workflow calls:
+#   schoonmaker ci-daily-release
+# No scripts to copy from this repo.
+#
+# ---------------------------------------------------------------------------
+# Configurable defaults (edit env below and/or cron):
+#
+# DEFAULT_BRANCH
+#   Default: master
+#   Change to main (or another name) if that is your default branch.
+#
+# RELEASE_LABEL
+#   Default: release-ready
+#   Create this label on the repo, or change the env value. Exactly one open
+#   PR with this label targeting DEFAULT_BRANCH is required; zero → skip
+#   (success); more than one → fail.
+#
+# schedule.cron
+#   GitHub Actions cron is ALWAYS UTC (no timezone field).
+#   Default: '0 9 * * *' = 09:00 UTC ≈ 02:00 America/Los_Angeles (PST).
+#   During PDT that is 01:00 local. For 02:00 UTC use '0 2 * * *'.
+#   workflow_dispatch allows a manual run anytime.
+#
+# Merge method
+#   ci-daily-release defaults to squash (gh pr merge --squash). Override with
+#   --merge-method merge|rebase on the run line if needed.
+#
+# First release tag
+#   next-semver --from-tags: if there are no semver tags, first release is
+#   v0.0.1 (baseline v0.0.0 + patch).
+#
+# Permissions: contents: write + pull-requests: write.
+# If branch protection blocks GITHUB_TOKEN merges, set secrets.RELEASE_TOKEN
+# (PAT) — this workflow prefers it over github.token.
+# ---------------------------------------------------------------------------
+
+name: FDX daily release
+
+on:
+  schedule:
+    # 09:00 UTC ≈ 02:00 US Pacific (PST). Use '0 2 * * *' for 02:00 UTC.
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  # Change to main if that is your default branch.
+  DEFAULT_BRANCH: master
+  # PR must have this label and target DEFAULT_BRANCH.
+  RELEASE_LABEL: release-ready
+
+jobs:
+  daily-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install schoonmaker
+        run: pip install -r requirements-ci.txt
+
+      - name: Select, merge, report, and release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
+        run: schoonmaker ci-daily-release
+
+      - uses: actions/upload-artifact@v4
+        if: steps.release.outputs.skip != 'true'
+        with:
+          name: fdx-analysis-daily-release
+          path: fdx-reports/

@@ -18,11 +18,16 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
   - **`parse_json_diff.py`** – `build_diff_report`, `load_parse_json`, `scene_digests` for `schoonmaker diff`.
   - **`ci_fdx_diff.py`** – `run_ci_fdx_diff`, `resolve_base_sha`, etc. for `schoonmaker ci-fdx-diff` (git + parse + diff).
   - **`ci_report_md.py`** – `markdown_from_ci_reports` for `schoonmaker ci-report-md` (GitHub Step Summary).
+  - **`ci_release_notes.py`** – `build_release_notes` for `schoonmaker ci-release-notes` (release / PR Markdown).
+  - **`ci_select_pr.py`** – `select_exactly_one_pr` for `schoonmaker ci-select-pr` (daily release gate).
+  - **`ci_daily_release.py`** – `run_ci_daily_release` for `schoonmaker ci-daily-release` (merge labeled PR, patch tag, FDX report, GitHub Release).
+  - **`semver_util.py`** / **`next_semver.py`** – patch bump + `schoonmaker next-semver`.
   - **`utils.py`** – Logging helpers; `strip_run_varying_ids` (shared checksum / diff normalization).
 - **`cli.py`** (repo root) – Thin shim calling `schoonmaker.cli:main` so **`python cli.py`** still works from a clone without installing.
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
-- **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-*.yml`),
+- **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-*.yml`,
+  `github-actions-fdx-daily-release.yml`),
   **`requirements-ci.txt`**, and **`examples/README.md`**. They should mirror real
   CLI usage (see **When adding or changing behavior** below).
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
@@ -86,6 +91,14 @@ schoonmaker ci-fdx-diff -o fdx-reports --list-items --display-boards
 
 # Markdown summary of ci-fdx-diff output (append to GITHUB_STEP_SUMMARY in Actions)
 schoonmaker ci-report-md fdx-reports
+
+# Daily release helpers (used by examples/github-actions-fdx-daily-release.yml)
+schoonmaker ci-daily-release
+# Optional overrides: --label, --default-branch main, --merge-method merge
+echo '[{"number":1,"title":"x"}]' | schoonmaker ci-select-pr --label release-ready
+schoonmaker next-semver v1.2.3
+schoonmaker next-semver --from-tags
+schoonmaker ci-release-notes fdx-reports --version v1.2.4 --pr 12 -o RELEASE_NOTES.md
 
 # Emit FDX → Fountain to stdout
 schoonmaker fountain -f path/to/script.fdx
