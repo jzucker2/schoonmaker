@@ -28,8 +28,11 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
 - **`samples/`** – Sample FDX files for manual use.
 - **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-*.yml`,
   `github-actions-fdx-daily-release.yml`),
-  **`requirements-ci.txt`**, and **`examples/README.md`**. They should mirror real
-  CLI usage (see **When adding or changing behavior** below).
+  **`requirements-ci.txt`**, and **`examples/README.md`**. Keep workflows **thin**:
+  install schoonmaker, call packaged CLI helpers (e.g. `ci-fdx-diff`,
+  `ci-daily-release`); do not ship large inline bash or extra scripts for
+  consumers to copy. They should mirror real CLI usage (see **When adding or
+  changing behavior** below).
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
 - **`requirements-dev.txt`** – `-e .` plus dev deps: black, flake8, pytest, pytest-cov, pre-commit, etc.
 - **`Makefile`** – `make test`, `make check`, `make format`, `make lint`, `make ci-check`.
@@ -130,9 +133,14 @@ Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `
 - **Format and lint:** Black (`make format`) uses `--line-length=79` but does **not** shorten every long line (e.g. comments and docstrings are often left as-is). Flake8 E501 fails on **any** line over 79 characters. So after `make format`, run **`make lint`** (or `make check`); fix any E501 by shortening those lines (break or reword comments/docstrings) so both format and lint pass.
 - **When adding or changing behavior:**
   - Keep **README** and this **AGENTS.md** in sync; update README when CLI, layout, or usage changes.
+  - Prefer **reusable CLI / package helpers** over large logic in GitHub Actions
+    YAML: put orchestration in `schoonmaker/` (tested, versioned with the
+    package); keep **`examples/*.yml`** thin (`pip install` + `schoonmaker …`).
+    Do not add consumer-copied shell scripts when a CLI subcommand will do.
   - Keep **`examples/`** in sync with the **parser**, **CLI**, **`parse`/`diff`**
-    output, **`ci-fdx-diff`**, and anything those workflows depend on (flags,
-    env vars, artifact layout, install instructions).
+    output, **`ci-fdx-diff`**, **`ci-daily-release`**, and anything those
+    workflows depend on (flags, env vars, artifact layout, install
+    instructions).
   - When CI usage of schoonmaker changes, update the workflow YAML under
     **`examples/`**, **`examples/requirements-ci.txt`** if install or pinning
     changes, and **`examples/README.md`** so copied templates stay accurate.
