@@ -28,6 +28,6 @@ Use the PR and/or push workflows for review and post-merge analysis. Add the dai
 
 Permissions: **`contents: write`**, **`pull-requests: write`**. If branch protection blocks `GITHUB_TOKEN`, set secret **`RELEASE_TOKEN`** (PAT).
 
-**Beat board in CI:** To include `<ListItems>` / `<DisplayBoards>` in the artifact JSON and in each `*-diff.json` summary, set **`CI_FDX_LIST_ITEMS`** / **`CI_FDX_DISPLAY_BOARDS`** to **`1`**, **`true`**, **`yes`**, or **`on`**, and/or pass **`--list-items`** / **`--display-boards`** on **`ci-fdx-diff`**. CLI and env are OR’d (either enables the option).
+**Beat board in CI:** To include `<ListItems>` / `<DisplayBoards>` in the artifact JSON and in each `*-diff.json` summary, set **`CI_FDX_LIST_ITEMS`** / **`CI_FDX_DISPLAY_BOARDS`** to **`1`**, **`true`**, **`yes`**, or **`on`**, and/or pass **`--list-items`** / **`--display-boards`** on **`ci-fdx-diff`**. CLI and env are OR’d (either enables the option). **`ci-daily-release`** honors the same env vars when it runs the embedded FDX diff.
 
 **Job summary in the GitHub UI:** The example workflows append Markdown to **`GITHUB_STEP_SUMMARY`** via **`schoonmaker ci-report-md fdx-reports`**, so the workflow run page shows tables for scene/word deltas per changed script. For pull requests, a [**sticky PR comment**](https://github.com/marocchino/sticky-pull-request-comment) or **`actions/github-script`** can post the same Markdown on the PR for visibility (needs `pull-requests: write`). **`ci-daily-release`** posts the release notes body as a PR comment automatically.

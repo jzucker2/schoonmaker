@@ -15,9 +15,8 @@ import sys
 from pathlib import Path
 from typing import Any, Callable
 
-from schoonmaker.ci_fdx_diff import run_ci_fdx_diff
+from schoonmaker.ci_fdx_diff import _env_truthy, run_ci_fdx_diff
 from schoonmaker.ci_release_notes import build_release_notes
-from schoonmaker.ci_report_md import markdown_from_ci_reports
 from schoonmaker.ci_select_pr import (
     SelectPrError,
     append_github_output,
@@ -138,7 +137,7 @@ def run_ci_daily_release(
                 "--base",
                 branch,
                 "--json",
-                "number,title,url,baseRefOid,headRefOid",
+                "number,title,url",
             ],
             cwd=cwd,
             check=True,
@@ -176,19 +175,42 @@ def run_ci_daily_release(
     pr_number = int(selected["number"])
     pr_title = str(selected.get("title") or "")
     pr_url = str(selected.get("url") or "")
-    base_sha = str(selected.get("baseRefOid") or "")
-    if not base_sha:
-        print(
-            "ci-daily-release: selected PR missing baseRefOid",
-            file=sys.stderr,
-        )
-        return 1
 
     merge_flag = {
         "squash": "--squash",
         "merge": "--merge",
         "rebase": "--rebase",
     }[method]
+
+    # Capture default-branch tip *before* merge so the FDX report is exactly
+    # the delta introduced by this merge (not a possibly stale baseRefOid).
+    print(f"==> Recording pre-merge tip of {branch}")
+    try:
+        run_fn(
+            ["git", "fetch", "origin", branch, "--tags"],
+            cwd=cwd,
+            check=True,
+        )
+        base_proc = run_fn(
+            ["git", "rev-parse", f"origin/{branch}"],
+            cwd=cwd,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        err = (e.stderr or e.stdout or str(e)).strip()
+        print(
+            f"ci-daily-release: pre-merge fetch failed: {err}",
+            file=sys.stderr,
+        )
+        return 1
+    base_sha = (base_proc.stdout or "").strip()
+    if not base_sha:
+        print(
+            f"ci-daily-release: empty origin/{branch} before merge",
+            file=sys.stderr,
+        )
+        return 1
+
     print(f"==> Merging PR #{pr_number} ({method})")
     try:
         run_fn(
@@ -246,7 +268,11 @@ def run_ci_daily_release(
     if ghub_out:
         append_github_output(
             ghub_out,
-            {"head_sha": head_sha, "tag": tag},
+            {
+                "base_sha": base_sha,
+                "head_sha": head_sha,
+                "tag": tag,
+            },
         )
 
     print(f"==> FDX diff {base_sha[:7]}..{head_sha[:7]}")
@@ -255,6 +281,8 @@ def run_ci_daily_release(
         base_sha,
         head_sha,
         repo=cwd,
+        list_items=_env_truthy("CI_FDX_LIST_ITEMS"),
+        display_boards=_env_truthy("CI_FDX_DISPLAY_BOARDS"),
     )
     if rc != 0:
         return rc
@@ -272,11 +300,8 @@ def run_ci_daily_release(
     if append_step_summary:
         summary = os.environ.get("GITHUB_STEP_SUMMARY")
         if summary:
-            body = markdown_from_ci_reports(reports)
+            # Release notes already embed the FDX Markdown report.
             with Path(summary).open("a", encoding="utf-8") as f:
-                f.write(body)
-                if not body.endswith("\n"):
-                    f.write("\n")
                 f.write(md)
                 if not md.endswith("\n"):
                     f.write("\n")
