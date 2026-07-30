@@ -18,13 +18,21 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
   - **`parse_json_diff.py`** – `build_diff_report`, `load_parse_json`, `scene_digests` for `schoonmaker diff`.
   - **`ci_fdx_diff.py`** – `run_ci_fdx_diff`, `resolve_base_sha`, etc. for `schoonmaker ci-fdx-diff` (git + parse + diff).
   - **`ci_report_md.py`** – `markdown_from_ci_reports` for `schoonmaker ci-report-md` (GitHub Step Summary).
+  - **`ci_release_notes.py`** – `build_release_notes` for `schoonmaker ci-release-notes` (release / PR Markdown).
+  - **`ci_select_pr.py`** – `select_exactly_one_pr` for `schoonmaker ci-select-pr` (daily release gate).
+  - **`ci_daily_release.py`** – `run_ci_daily_release` for `schoonmaker ci-daily-release` (merge labeled PR, patch tag, FDX report, GitHub Release).
+  - **`semver_util.py`** / **`next_semver.py`** – patch bump + `schoonmaker next-semver`.
   - **`utils.py`** – Logging helpers; `strip_run_varying_ids` (shared checksum / diff normalization).
 - **`cli.py`** (repo root) – Thin shim calling `schoonmaker.cli:main` so **`python cli.py`** still works from a clone without installing.
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
-- **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-*.yml`),
-  **`requirements-ci.txt`**, and **`examples/README.md`**. They should mirror real
-  CLI usage (see **When adding or changing behavior** below).
+- **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-*.yml`,
+  `github-actions-fdx-daily-release.yml`),
+  **`requirements-ci.txt`**, and **`examples/README.md`**. Keep workflows **thin**:
+  install schoonmaker, call packaged CLI helpers (e.g. `ci-fdx-diff`,
+  `ci-daily-release`); do not ship large inline bash or extra scripts for
+  consumers to copy. They should mirror real CLI usage (see **When adding or
+  changing behavior** below).
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
 - **`requirements-dev.txt`** – `-e .` plus dev deps: black, flake8, pytest, pytest-cov, pre-commit, etc.
 - **`Makefile`** – `make test`, `make check`, `make format`, `make lint`, `make ci-check`.
@@ -87,6 +95,14 @@ schoonmaker ci-fdx-diff -o fdx-reports --list-items --display-boards
 # Markdown summary of ci-fdx-diff output (append to GITHUB_STEP_SUMMARY in Actions)
 schoonmaker ci-report-md fdx-reports
 
+# Daily release helpers (used by examples/github-actions-fdx-daily-release.yml)
+schoonmaker ci-daily-release
+# Optional overrides: --label, --default-branch main, --merge-method merge
+echo '[{"number":1,"title":"x"}]' | schoonmaker ci-select-pr --label release-ready
+schoonmaker next-semver v1.2.3
+schoonmaker next-semver --from-tags
+schoonmaker ci-release-notes fdx-reports --version v1.2.4 --pr 12 -o RELEASE_NOTES.md
+
 # Emit FDX → Fountain to stdout
 schoonmaker fountain -f path/to/script.fdx
 
@@ -117,9 +133,14 @@ Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `
 - **Format and lint:** Black (`make format`) uses `--line-length=79` but does **not** shorten every long line (e.g. comments and docstrings are often left as-is). Flake8 E501 fails on **any** line over 79 characters. So after `make format`, run **`make lint`** (or `make check`); fix any E501 by shortening those lines (break or reword comments/docstrings) so both format and lint pass.
 - **When adding or changing behavior:**
   - Keep **README** and this **AGENTS.md** in sync; update README when CLI, layout, or usage changes.
+  - Prefer **reusable CLI / package helpers** over large logic in GitHub Actions
+    YAML: put orchestration in `schoonmaker/` (tested, versioned with the
+    package); keep **`examples/*.yml`** thin (`pip install` + `schoonmaker …`).
+    Do not add consumer-copied shell scripts when a CLI subcommand will do.
   - Keep **`examples/`** in sync with the **parser**, **CLI**, **`parse`/`diff`**
-    output, **`ci-fdx-diff`**, and anything those workflows depend on (flags,
-    env vars, artifact layout, install instructions).
+    output, **`ci-fdx-diff`**, **`ci-daily-release`**, and anything those
+    workflows depend on (flags, env vars, artifact layout, install
+    instructions).
   - When CI usage of schoonmaker changes, update the workflow YAML under
     **`examples/`**, **`examples/requirements-ci.txt`** if install or pinning
     changes, and **`examples/README.md`** so copied templates stay accurate.

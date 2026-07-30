@@ -190,6 +190,22 @@ def main() -> int:
         from schoonmaker.ci_report_md import main_ci_report_md
 
         return main_ci_report_md(args)
+    if args.command == "ci-release-notes":
+        from schoonmaker.ci_release_notes import main_ci_release_notes
+
+        return main_ci_release_notes(args)
+    if args.command == "ci-select-pr":
+        from schoonmaker.ci_select_pr import main_ci_select_pr
+
+        return main_ci_select_pr(args)
+    if args.command == "ci-daily-release":
+        from schoonmaker.ci_daily_release import main_ci_daily_release
+
+        return main_ci_daily_release(args)
+    if args.command == "next-semver":
+        from schoonmaker.next_semver import main_next_semver
+
+        return main_next_semver(args)
 
     log.error("Unknown command: %s", args.command)
     return 2
