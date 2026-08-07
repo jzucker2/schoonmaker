@@ -20,6 +20,7 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
   - **`ci_report_md.py`** – `markdown_from_ci_reports` for `schoonmaker ci-report-md` (GitHub Step Summary).
   - **`ci_release_notes.py`** – `build_release_notes` for `schoonmaker ci-release-notes` (release / PR Markdown).
   - **`ci_select_pr.py`** – `select_exactly_one_pr` for `schoonmaker ci-select-pr` (daily release gate).
+  - **`ci_label_pr.py`** – `should_label_pr` / `run_ci_label_pr` for `schoonmaker ci-label-pr` (auto-label PRs by head branch prefix).
   - **`ci_daily_release.py`** – `run_ci_daily_release` for `schoonmaker ci-daily-release` (merge labeled PR, patch tag, FDX report, GitHub Release).
   - **`semver_util.py`** / **`next_semver.py`** – patch bump + `schoonmaker next-semver`.
   - **`utils.py`** – Logging helpers; `strip_run_varying_ids` (shared checksum / diff normalization).
@@ -27,12 +28,12 @@ This repo is a **Python tool** for working with Final Draft `.fdx` screenplay fi
 - **`tests/`** – Unified test suite (pytest). **`tests/fixtures/`** – FDX and other test fixtures (e.g. `sample.fdx`).
 - **`samples/`** – Sample FDX files for manual use.
 - **`examples/`** – GitHub Actions templates (`github-actions-fdx-changes-*.yml`,
-  `github-actions-fdx-daily-release.yml`),
+  `github-actions-fdx-label-pr.yml`, `github-actions-fdx-daily-release.yml`),
   **`requirements-ci.txt`**, and **`examples/README.md`**. Keep workflows **thin**:
   install schoonmaker, call packaged CLI helpers (e.g. `ci-fdx-diff`,
-  `ci-daily-release`); do not ship large inline bash or extra scripts for
-  consumers to copy. They should mirror real CLI usage (see **When adding or
-  changing behavior** below).
+  `ci-label-pr`, `ci-daily-release`); do not ship large inline bash or extra
+  scripts for consumers to copy. They should mirror real CLI usage (see
+  **When adding or changing behavior** below).
 - **`requirements.txt`** – Runtime deps (empty or minimal for stdlib-only use).
 - **`requirements-dev.txt`** – `-e .` plus dev deps: black, flake8, pytest, pytest-cov, pre-commit, etc.
 - **`Makefile`** – `make test`, `make check`, `make format`, `make lint`, `make ci-check`.
@@ -103,6 +104,12 @@ schoonmaker next-semver v1.2.3
 schoonmaker next-semver --from-tags
 schoonmaker ci-release-notes fdx-reports --version v1.2.4 --pr 12 -o RELEASE_NOTES.md
 
+# Auto-label a PR when head branch starts with writing/ (default)
+# Used by examples/github-actions-fdx-label-pr.yml (opened/reopened)
+schoonmaker ci-label-pr --pr 12 --head-ref writing/act-2
+# Overrides: --label / RELEASE_LABEL, --branch-prefix / PR_BRANCH_PREFIX
+schoonmaker ci-label-pr --pr 12 --head-ref writing/x --dry-run
+
 # Emit FDX → Fountain to stdout
 schoonmaker fountain -f path/to/script.fdx
 
@@ -138,9 +145,9 @@ Parse output always includes `nonce`, `parser_version`, `parse_datetime`; with `
     package); keep **`examples/*.yml`** thin (`pip install` + `schoonmaker …`).
     Do not add consumer-copied shell scripts when a CLI subcommand will do.
   - Keep **`examples/`** in sync with the **parser**, **CLI**, **`parse`/`diff`**
-    output, **`ci-fdx-diff`**, **`ci-daily-release`**, and anything those
-    workflows depend on (flags, env vars, artifact layout, install
-    instructions).
+    output, **`ci-fdx-diff`**, **`ci-label-pr`**, **`ci-daily-release`**, and
+    anything those workflows depend on (flags, env vars, artifact layout,
+    install instructions).
   - When CI usage of schoonmaker changes, update the workflow YAML under
     **`examples/`**, **`examples/requirements-ci.txt`** if install or pinning
     changes, and **`examples/README.md`** so copied templates stay accurate.

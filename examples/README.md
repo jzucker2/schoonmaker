@@ -6,15 +6,31 @@ Copy **`requirements-ci.txt`** to the root of your repo and set **org + tag** fo
 |------|-------------|
 | **`github-actions-fdx-changes-pr.yml`** | **Pull requests** — sets `CI_FDX_BASE_SHA` / `CI_FDX_HEAD_SHA` from the PR, runs **`schoonmaker ci-fdx-diff`**. |
 | **`github-actions-fdx-changes-push.yml`** | **Pushes to `main`/`master`** — same command; push **`before`** may be all zeros; **`ci-fdx-diff`** resolves the parent of **`after`** in Python when needed. |
+| **`github-actions-fdx-label-pr.yml`** | **PR opened/reopened** — runs **`schoonmaker ci-label-pr`**; if the head branch starts with `writing/`, adds the **`release-ready`** label. |
 | **`github-actions-fdx-daily-release.yml`** | **Daily cron + manual** — after `pip install`, runs **`schoonmaker ci-daily-release`** (no extra scripts to copy). |
 
-Use the PR and/or push workflows for review and post-merge analysis. Add the daily release workflow when you want a scheduled “ship the labeled PR” path.
+Use the PR and/or push workflows for review and post-merge analysis. Add the label-PR workflow to auto-tag writing branches for daily release, and the daily release workflow when you want a scheduled “ship the labeled PR” path.
+
+**Auto-label PRs for daily release**
+
+1. Copy **`github-actions-fdx-label-pr.yml`** → **`.github/workflows/`**
+2. Copy **`requirements-ci.txt`** (same pin as other FDX workflows)
+3. Ensure the **`release-ready`** label exists (or change `RELEASE_LABEL`)
+
+| Setting | Default | Notes |
+|---------|---------|--------|
+| `RELEASE_LABEL` | `release-ready` | Same label the daily-release workflow looks for |
+| `PR_BRANCH_PREFIX` | `writing/` | Case-sensitive **startswith** on the PR head branch name |
+| Triggers | `opened`, `reopened` | Omits `synchronize` so the label is applied once on open/reopen |
+
+Permissions: **`contents: read`**, **`pull-requests: write`**.
 
 **Daily release setup**
 
 1. Copy **`github-actions-fdx-daily-release.yml`** → **`.github/workflows/`**
 2. Copy **`requirements-ci.txt`** to the repo root and pin a schoonmaker tag that includes **`ci-daily-release`**
 3. Create the **`release-ready`** label (or change `RELEASE_LABEL` in the workflow)
+   — or rely on **`github-actions-fdx-label-pr.yml`** to add it when the head branch matches `writing/`
 
 **Configurable defaults** (also documented in the workflow YAML header)
 
