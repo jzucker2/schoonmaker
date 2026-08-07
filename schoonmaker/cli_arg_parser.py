@@ -12,7 +12,8 @@ class CLIArgParser(object):
             description=(
                 "Parse FDX; export JSON AST or Fountain; diff parse JSON "
                 "or CI reports; Markdown for GitHub Actions; patch release "
-                "helpers (next-semver, ci-select-pr, ci-release-notes)."
+                "helpers (next-semver, ci-select-pr, ci-label-pr, "
+                "ci-release-notes)."
             ),
         )
         subparsers = self.parser.add_subparsers(dest="command", required=True)
@@ -335,6 +336,56 @@ class CLIArgParser(object):
             help="Do not append to $GITHUB_STEP_SUMMARY",
         )
         daily_parser.set_defaults(command="ci-daily-release")
+
+        label_pr_parser = subparsers.add_parser(
+            "ci-label-pr",
+            help=(
+                "Add release label to a PR when head branch matches a prefix"
+            ),
+        )
+        label_pr_parser.add_argument(
+            "--pr",
+            type=str,
+            default="",
+            dest="pr_number",
+            help="Pull request number (or env PR_NUMBER)",
+        )
+        label_pr_parser.add_argument(
+            "--head-ref",
+            type=str,
+            default="",
+            dest="head_ref",
+            help=("PR head branch name (or PR_HEAD_REF / GITHUB_HEAD_REF)"),
+        )
+        label_pr_parser.add_argument(
+            "--label",
+            type=str,
+            default="",
+            help=("Label to add (default: release-ready or RELEASE_LABEL)"),
+        )
+        label_pr_parser.add_argument(
+            "--branch-prefix",
+            type=str,
+            default="",
+            dest="branch_prefix",
+            help=(
+                "Head branch prefix to match (default: writing/ or "
+                "PR_BRANCH_PREFIX); uses startswith"
+            ),
+        )
+        label_pr_parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            dest="dry_run",
+            help="Decide and report without calling gh",
+        )
+        label_pr_parser.add_argument(
+            "--no-actions-output",
+            action="store_true",
+            dest="no_actions_output",
+            help="Do not write labeled= to $GITHUB_OUTPUT",
+        )
+        label_pr_parser.set_defaults(command="ci-label-pr")
 
         next_semver_parser = subparsers.add_parser(
             "next-semver",
