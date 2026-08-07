@@ -1,3 +1,4 @@
 # CI-only deps for FDX analysis workflows. Copy this file to your repo root
 # (next to .github/) and pin org + tag or commit.
-git+https://github.com/jzucker2/schoonmaker.git@1.2.0
+# 2.0.0+ includes ci-daily-release (used by github-actions-fdx-daily-release.yml).
+git+https://github.com/jzucker2/schoonmaker.git@2.0.1
