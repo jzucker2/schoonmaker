@@ -1,0 +1,70 @@
+# Auto-label new/reopened PRs for daily release when the head branch
+# matches a prefix (default: writing/).
+#
+# Copy with requirements-ci.txt (see examples/README.md). After pip install:
+#   schoonmaker ci-label-pr --pr … --head-ref …
+# No scripts to copy from this repo.
+#
+# ---------------------------------------------------------------------------
+# Configurable defaults (edit env below):
+#
+# RELEASE_LABEL
+#   Default: release-ready
+#   Same label as github-actions-fdx-daily-release.yml. Create it on the
+#   repo, or change this env value (and the daily-release workflow).
+#
+# PR_BRANCH_PREFIX
+#   Default: writing/
+#   Head branch must start with this prefix (case-sensitive startswith).
+#   Examples that match: writing/act-2, writing/foo-bar
+#   Examples that skip: feature/x, Writing/x (case), main
+#
+# When it runs
+#   pull_request types: opened, reopened only.
+#   synchronize (new commits) is omitted: the label is applied once when the
+#   PR is opened/reopened; head branch renames are rare. Add synchronize if
+#   you want re-evaluation on every push.
+#
+# Permissions: contents: read + pull-requests: write.
+# ---------------------------------------------------------------------------
+
+name: FDX label PR for daily release
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  # Same label as the daily-release workflow.
+  RELEASE_LABEL: release-ready
+  # Head branch must start with this prefix (startswith).
+  PR_BRANCH_PREFIX: writing/
+
+jobs:
+  label-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install schoonmaker
+        run: pip install -r requirements-ci.txt
+
+      - name: Label PR when head branch matches prefix
+        id: label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_REF: ${{ github.head_ref }}
+        run: schoonmaker ci-label-pr

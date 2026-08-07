@@ -133,6 +133,28 @@ class TestCLIArgs(unittest.TestCase):
         self.assertEqual(args.command, "ci-select-pr")
         self.assertEqual(args.label, "release-ready")
 
+    def test_ci_label_pr_flags(self):
+        args = CLIArgParser().parser.parse_args(
+            [
+                "ci-label-pr",
+                "--pr",
+                "42",
+                "--head-ref",
+                "writing/act-1",
+                "--label",
+                "release-ready",
+                "--branch-prefix",
+                "writing/",
+                "--dry-run",
+            ]
+        )
+        self.assertEqual(args.command, "ci-label-pr")
+        self.assertEqual(args.pr_number, "42")
+        self.assertEqual(args.head_ref, "writing/act-1")
+        self.assertEqual(args.label, "release-ready")
+        self.assertEqual(args.branch_prefix, "writing/")
+        self.assertTrue(args.dry_run)
+
 
 def test_python_m_schoonmaker_run_help():
     """``python -m schoonmaker`` works from the repo (package layout + __main__)."""  # noqa: E501

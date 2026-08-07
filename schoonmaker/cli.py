@@ -202,6 +202,10 @@ def main() -> int:
         from schoonmaker.ci_daily_release import main_ci_daily_release
 
         return main_ci_daily_release(args)
+    if args.command == "ci-label-pr":
+        from schoonmaker.ci_label_pr import main_ci_label_pr
+
+        return main_ci_label_pr(args)
     if args.command == "next-semver":
         from schoonmaker.next_semver import main_next_semver
 
